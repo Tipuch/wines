@@ -1,5 +1,8 @@
 table! {
-    saq_wine (id) {
+    use types::WineColor;
+    use diesel::sql_types::*;
+
+    saq_wines (id) {
         id -> Int4,
         name -> Varchar,
         country -> Varchar,
@@ -9,7 +12,7 @@ table! {
         producer -> Varchar,
         volume -> Numeric,
         alcohol_percent -> Int4,
-        color -> Wine_color,
-        grape_varieties -> Nullable<Array<Text>>,
+        color -> WineColor,
+        grape_varieties -> Array<Text>,
     }
 }

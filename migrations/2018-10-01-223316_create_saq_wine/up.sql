@@ -1,5 +1,5 @@
 CREATE TYPE wine_color AS ENUM ('red', 'white', 'pink');
-CREATE TABLE saq_wine
+CREATE TABLE saq_wines
 (
     id SERIAL PRIMARY KEY,
     name varchar NOT NULL UNIQUE CHECK (name <> ''),
@@ -11,7 +11,7 @@ CREATE TABLE saq_wine
     volume decimal NOT NULL,
     alcohol_percent integer NOT NULL,
     color wine_color NOT NULL,
-    grape_varieties text[][2]
+    grape_varieties text[] NOT NULL
 );
-CREATE INDEX saq_wine_name_idx ON saq_wine (name);
-CREATE INDEX saq_wine_country_region_idx ON saq_wine (country, region);
+CREATE INDEX saq_wines_name_idx ON saq_wines (name);
+CREATE INDEX saq_wines_country_region_idx ON saq_wines (country, region);
