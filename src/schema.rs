@@ -11,7 +11,7 @@ table! {
         regulated_designation -> Bool,
         producer -> Varchar,
         volume -> Numeric,
-        alcohol_percent -> Int4,
+        alcohol_percent -> Numeric,
         color -> WineColor,
         grape_varieties -> Array<Text>,
     }

@@ -9,7 +9,7 @@ CREATE TABLE saq_wines
     regulated_designation boolean NOT NULL,
     producer varchar NOT NULL,
     volume decimal NOT NULL,
-    alcohol_percent integer NOT NULL,
+    alcohol_percent decimal NOT NULL,
     color wine_color NOT NULL,
     grape_varieties text[] NOT NULL
 );
