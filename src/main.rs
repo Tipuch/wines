@@ -8,8 +8,7 @@ extern crate bigdecimal;
 mod crawler;
 mod schema;
 mod models;
-use crawler::crawl_saq_wine;
-use select::document::Document;
+use crawler::crawl_saq;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
@@ -81,7 +80,7 @@ fn main() {
     //     &connection, "test", "test", "test", "test", &true, "test", &BigDecimal::from_str(&"22.2").unwrap(),
     //     &22, &WineColorEnum::Red, &vec![]
     // );
-    crawl_saq_wine(&"https://www.saq.com/page/en/saqcom/red-wine/a-de-luze--fils-chateau-la-verriere-2015/13710861?selectedIndex=18&searchContextId=-100215205544233");
+    crawl_saq(&origin_url);
 
     println!("Success !");
 }

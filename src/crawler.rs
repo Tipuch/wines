@@ -12,7 +12,7 @@ use select::predicate::{Predicate, Attr, Class, Name};
 
 pub const PAGE_SIZE: u8 = 20;
 
-pub fn get_document(url: &String) -> ReqwestResult<String> {
+fn get_document(url: &String) -> ReqwestResult<String> {
     let result = get(url)?.text()?;
     Ok(result)
 }
@@ -21,10 +21,7 @@ pub fn crawl_saq(origin_url: &String) {
     let mut document = Document::from(&*get_document(origin_url).ok().unwrap());
     let mut next_page = get_next_page(&document);
     while next_page.is_some() {
-        for node in document.find(Attr("id", "resultatRecherche").descendant(Name("a"))) {
-            if node.attr("name").unwrap() == "firstItemAnchor" {
-                continue;
-            }
+        for node in document.find(Attr("id", "resultatRecherche").descendant(Class("nom").descendant(Name("a")))) {
             crawl_saq_wine(node.attr("href").unwrap());
         }
         document = Document::from(&*get_document(&next_page.unwrap()).ok().unwrap());
@@ -32,7 +29,7 @@ pub fn crawl_saq(origin_url: &String) {
     }
 }
 
-pub fn get_next_page(document: &Document) -> Option<String> {
+fn get_next_page(document: &Document) -> Option<String> {
     let next_page = document.find(Attr("id", "page-suivante-haut")).next().unwrap().parent();
     // there may not be a next page
     if next_page.is_none() {
@@ -45,19 +42,28 @@ pub fn get_next_page(document: &Document) -> Option<String> {
     Some(onclick_attr[url_begin_index..url_end_index].to_string())
 }
 
-pub fn crawl_saq_wine(detail_page_url: &str) {
+fn crawl_saq_wine(detail_page_url: &str) {
     let connection = establish_connection();
+    println!("SAQ Wine detail page url: {}", detail_page_url);
     let document = Document::from(&*get_document(&String::from(detail_page_url)).ok().unwrap());
 
     let name = document.find(Class("product-description-title")).next().unwrap().text();
+    let price = parse_price(&document);
+    println!("Price: {}", price);
+    
     let default_parsing_func = |node: &Node| {Some(String::from(node.text().trim()))};
     // fetch info from detailed info in the web page.
     let country = parse_wine_info(&document, "Country", Box::new(default_parsing_func)).unwrap();
-    let region = parse_wine_info(&document, "Region", Box::new(default_parsing_func)).unwrap();
+    let mut region = String::from("");
+    let region_option = parse_wine_info(&document, "Region", Box::new(default_parsing_func));
+    if region_option.is_some() {
+        region = parse_wine_info(&document, "Region", Box::new(default_parsing_func)).unwrap();
+    }
     let mut designation_of_origin = String::from("");
     let designation_of_origin_option = parse_wine_info(&document, "Designation of origin", Box::new(default_parsing_func));
-    let regulated_designation_label = parse_wine_info(&document, "Regulated designation", Box::new(default_parsing_func)).unwrap();
-    let regulated_designation = designation_of_origin_option.is_some() && regulated_designation_label != "Table wine";
+    let regulated_designation_option = parse_wine_info(&document, "Regulated designation", Box::new(default_parsing_func));
+    let regulated_designation = designation_of_origin_option.is_some() && regulated_designation_option.is_some() 
+        && regulated_designation_option.unwrap() != "Table wine";
     if regulated_designation {
         designation_of_origin = designation_of_origin_option.unwrap();
     }
@@ -69,7 +75,7 @@ pub fn crawl_saq_wine(detail_page_url: &str) {
             return Some(volume_text[..volume_text.find("ml").unwrap()].trim().to_string());
         }
         let volume_liters = BigDecimal::from_str(
-            &volume_text[..volume_text.find("ml").unwrap()].trim()
+            &volume_text[..volume_text.find("L").unwrap()].trim()
             ).unwrap();
         
         Some((volume_liters * BigDecimal::from_str("1000").unwrap()).to_string())
@@ -86,9 +92,10 @@ pub fn crawl_saq_wine(detail_page_url: &str) {
 
     create_saq_wine(
         &connection, &name, &country, &region, &designation_of_origin, &regulated_designation,
-        &producer, &BigDecimal::from_str(&volume).unwrap(),
+        &producer, &BigDecimal::from_str(&volume).unwrap(), &BigDecimal::from_str(&price).unwrap(),
         &alcohol_percent, &parse_wine_color(&wine_color.to_lowercase()).unwrap(), &vec![]
     );
+    println!("SAQ Wine: {} was added", name);
 }
 
 fn parse_wine_info(document: &Document, info_selector: &str,
@@ -104,6 +111,16 @@ fn parse_wine_info(document: &Document, info_selector: &str,
         }
     }
     None
+}
+
+fn parse_price(document: &Document) -> String {
+    let price_info = document.find(Class("price")).next().unwrap().text().replace(",", "");
+    let little_star = price_info.rfind("*");
+    if little_star.is_some() {
+        return price_info[(price_info.find("$").unwrap() + 1)..little_star.unwrap()].to_string();
+    } else {
+        return price_info[(price_info.find("$").unwrap() + 1)..].to_string();
+    }
 }
 
 fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<Error>> {

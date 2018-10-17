@@ -16,6 +16,7 @@ pub struct SaqWine {
     pub producer: String,
     // in liters
     pub volume: BigDecimal,
+    pub price: BigDecimal,
     pub alcohol_percent: BigDecimal,
     pub color: WineColorEnum,
     pub grape_varieties: Vec<String>
@@ -31,6 +32,7 @@ pub struct NewSaqWine<'a> {
     pub regulated_designation: &'a bool,
     pub producer: &'a str,
     pub volume: &'a BigDecimal,
+    pub price: &'a BigDecimal,
     pub alcohol_percent: &'a BigDecimal,
     pub color: &'a WineColorEnum,
     pub grape_varieties: &'a Vec<String>
@@ -38,7 +40,7 @@ pub struct NewSaqWine<'a> {
 
 pub fn create_saq_wine<'a>(conn: &PgConnection, name: &'a str, country: &'a str, region: &'a str, 
 designation_of_origin: &'a str, regulated_designation: &'a bool, producer: &'a str,
-volume: &'a BigDecimal, alcohol_percent: &'a BigDecimal,
+volume: &'a BigDecimal, price: &'a BigDecimal, alcohol_percent: &'a BigDecimal,
 color: &'a WineColorEnum, grape_varieties: &'a Vec<String>) -> SaqWine {
 
     let new_saq_wine = NewSaqWine {
@@ -49,6 +51,7 @@ color: &'a WineColorEnum, grape_varieties: &'a Vec<String>) -> SaqWine {
         regulated_designation: regulated_designation,
         producer: producer,
         volume: volume,
+        price: price,
         alcohol_percent: alcohol_percent,
         color: color,
         grape_varieties: grape_varieties
