@@ -1,4 +1,4 @@
-use reqwest::get;
+use reqwest;
 use reqwest::Result as ReqwestResult;
 use establish_connection;
 use types::WineColorEnum;
@@ -13,29 +13,32 @@ use select::predicate::{Predicate, Attr, Class, Name};
 pub const PAGE_SIZE: u8 = 20;
 
 fn get_document(url: &String) -> ReqwestResult<String> {
-    let result = get(url)?.text()?;
+    let client = reqwest::Client::builder()
+    .timeout(None)
+    .build()?;
+    let result = client.get(url).send()?.text()?;
     Ok(result)
 }
 
 pub fn crawl_saq(origin_url: &String) {
-    let mut document = Document::from(&*get_document(origin_url).ok().unwrap());
+    let mut document = Document::from(&*get_document(origin_url).unwrap());
     let mut next_page = get_next_page(&document);
     while next_page.is_some() {
         for node in document.find(Attr("id", "resultatRecherche").descendant(Class("nom").descendant(Name("a")))) {
             crawl_saq_wine(node.attr("href").unwrap());
         }
-        document = Document::from(&*get_document(&next_page.unwrap()).ok().unwrap());
+        document = Document::from(&*get_document(&next_page.unwrap()).unwrap());
         next_page = get_next_page(&document);
     }
 }
 
 fn get_next_page(document: &Document) -> Option<String> {
-    let next_page = document.find(Attr("id", "page-suivante-haut")).next().unwrap().parent();
+    let next_page = document.find(Attr("id", "page-suivante-haut")).next();
     // there may not be a next page
     if next_page.is_none() {
         return None;
     }
-    let onclick_attr = String::from(next_page.unwrap().attr("onclick").unwrap());
+    let onclick_attr = String::from(next_page.unwrap().parent().unwrap().attr("onclick").unwrap());
     // parse url out of onclick parameter
     let url_begin_index = onclick_attr.find("http").unwrap();
     let url_end_index = onclick_attr.rfind("'").unwrap();
@@ -44,12 +47,10 @@ fn get_next_page(document: &Document) -> Option<String> {
 
 fn crawl_saq_wine(detail_page_url: &str) {
     let connection = establish_connection();
-    println!("SAQ Wine detail page url: {}", detail_page_url);
-    let document = Document::from(&*get_document(&String::from(detail_page_url)).ok().unwrap());
+    let document = Document::from(&*get_document(&String::from(detail_page_url)).unwrap());
 
     let name = document.find(Class("product-description-title")).next().unwrap().text();
     let price = parse_price(&document);
-    println!("Price: {}", price);
     
     let default_parsing_func = |node: &Node| {Some(String::from(node.text().trim()))};
     // fetch info from detailed info in the web page.
@@ -93,7 +94,7 @@ fn crawl_saq_wine(detail_page_url: &str) {
     create_saq_wine(
         &connection, &name, &country, &region, &designation_of_origin, &regulated_designation,
         &producer, &BigDecimal::from_str(&volume).unwrap(), &BigDecimal::from_str(&price).unwrap(),
-        &alcohol_percent, &parse_wine_color(&wine_color.to_lowercase()).unwrap(), &vec![]
+        &alcohol_percent, &parse_wine_color(&wine_color.to_lowercase()).unwrap(), &parse_grape_varieties(&document)
     );
     println!("SAQ Wine: {} was added", name);
 }
@@ -121,6 +122,23 @@ fn parse_price(document: &Document) -> String {
     } else {
         return price_info[(price_info.find("$").unwrap() + 1)..].to_string();
     }
+}
+
+fn parse_grape_varieties(document: &Document) -> Vec<String> {
+    let mut result = vec![];
+    for node in document.find(Attr("id", "details").descendant(Name("li"))) {
+        let left = node.find(Class("left").descendant(Name("span"))).next();
+        let right = node.find(Class("right")).next();
+        if left.is_some() && right.is_some() {
+            if left.unwrap().text() == "Grape variety(ies)" {
+                for col in right.unwrap().find(Class("col1")) {
+                    result.push(col.text());
+                }
+                return result;
+            }
+        }
+    }
+    result
 }
 
 fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<Error>> {
