@@ -3,6 +3,7 @@ use diesel;
 use diesel::query_dsl::RunQueryDsl;
 use diesel::prelude::PgConnection;
 use schema::saq_wines;
+use schema::wine_recommendations;
 use types::WineColorEnum;
 
 #[derive(Queryable)]
@@ -61,4 +62,48 @@ color: &'a WineColorEnum, grape_varieties: &'a Vec<String>) -> SaqWine {
         .values(&new_saq_wine)
         .get_result(conn)
         .expect("Error saving new SAQ Wine.")
+}
+
+#[derive(Queryable)]
+pub struct WineRecommendation {
+    pub id: i32,
+    pub country: String,
+    pub region: String,
+    pub designation_of_origin: String,
+    pub producer: String,
+    pub rating: i32,
+    pub color: WineColorEnum,
+    pub grape_variety: String
+}
+
+#[derive(Insertable)]
+#[table_name="wine_recommendations"]
+pub struct NewWineRecommendation<'a> {
+    pub country: &'a str,
+    pub region: &'a str,
+    pub designation_of_origin: &'a str,
+    pub producer: &'a str,
+    pub rating: &'a i32,
+    pub color: &'a WineColorEnum,
+    pub grape_variety: &'a str
+}
+
+pub fn create_wine_recommendation<'a>(conn: &PgConnection, country: &'a str, region: &'a str,
+designation_of_origin: &'a str, producer: &'a str, rating: &'a i32, color: &'a WineColorEnum,
+grape_variety: &'a str) -> WineRecommendation {
+
+    let new_wine_recommendation = NewWineRecommendation {
+        country: country,
+        region: region,
+        designation_of_origin: designation_of_origin,
+        producer: producer,
+        rating: rating,
+        color: color,
+        grape_variety: grape_variety
+    };
+
+    diesel::insert_into(wine_recommendations::table)
+        .values(&new_wine_recommendation)
+        .get_result(conn)
+        .expect("Error saving new wine recommendation.")
 }

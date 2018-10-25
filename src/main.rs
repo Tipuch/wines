@@ -75,11 +75,6 @@ fn main() {
     //     .run();
 
     let origin_url = format!("https://www.saq.com/webapp/wcs/stores/servlet/SearchDisplay?pageSize={PAGE_SIZE}&searchTerm=*&catalogId=50000&orderBy=1&facet=adi_f9%3A%221%22|adi_f9%3A%221%22&categoryIdentifier=06&beginIndex=0&langId=-1&showOnly=product&categoryId=39919&storeId=20002&metaData=", PAGE_SIZE=crawler::PAGE_SIZE);
-    // let connection = establish_connection();
-    // create_saq_wine(
-    //     &connection, "test", "test", "test", "test", &true, "test", &BigDecimal::from_str(&"22.2").unwrap(),
-    //     &22, &WineColorEnum::Red, &vec![]
-    // );
     crawl_saq(&origin_url);
 
     println!("Success !");
