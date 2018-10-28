@@ -3,21 +3,23 @@ extern crate actix_web;
 extern crate select;
 extern crate reqwest;
 extern crate dotenv;
+extern crate futures;
+extern crate csv;
+#[macro_use] extern crate serde_derive;
 #[macro_use] extern crate diesel;
 extern crate bigdecimal;
-mod crawler;
 mod schema;
 mod models;
-use crawler::crawl_saq;
+mod controllers;
+use actix_web::{
+    http, middleware, server, App
+};
+use controllers::{index, upload};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
 use std::env;
 
-
-// fn index(_req: &HttpRequest) -> &'static str {
-//     "Hello world!"
-// }
 
 mod types {
     use diesel::pg::{Pg};
@@ -69,13 +71,14 @@ pub fn establish_connection() -> PgConnection {
 }
 
 fn main() {
-    // server::new(|| App::new().resource("/", |r| r.f(index)))
-    //     .bind("127.0.0.1:8080")
-    //     .unwrap()
-    //     .run();
-
-    let origin_url = format!("https://www.saq.com/webapp/wcs/stores/servlet/SearchDisplay?pageSize={PAGE_SIZE}&searchTerm=*&catalogId=50000&orderBy=1&facet=adi_f9%3A%221%22|adi_f9%3A%221%22&categoryIdentifier=06&beginIndex=0&langId=-1&showOnly=product&categoryId=39919&storeId=20002&metaData=", PAGE_SIZE=crawler::PAGE_SIZE);
-    crawl_saq(&origin_url);
-
-    println!("Success !");
+    server::new(|| {
+        App::new()
+        .middleware(middleware::Logger::default())
+        .resource("/", |r| {
+            r.method(http::Method::GET).with(index);
+            r.method(http::Method::POST).with(upload);
+        })})
+        .bind("127.0.0.1:8080")
+        .unwrap()
+        .run();
 }
