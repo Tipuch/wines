@@ -2,7 +2,7 @@ use reqwest;
 use reqwest::Result as ReqwestResult;
 use establish_connection;
 use types::WineColorEnum;
-use models::create_saq_wine;
+use models::{create_saq_wine, parse_wine_color};
 use std::str::FromStr;
 use std::error::Error;
 use bigdecimal::BigDecimal;
@@ -139,13 +139,4 @@ fn parse_grape_varieties(document: &Document) -> Vec<String> {
         }
     }
     result
-}
-
-fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<Error>> {
-    match string {
-        "red" => Ok(WineColorEnum::Red),
-        "white" => Ok(WineColorEnum::White),
-        "pink" => Ok(WineColorEnum::Pink),
-        _ => Err("Unrecognized enum variant".into()),
-    }
 }

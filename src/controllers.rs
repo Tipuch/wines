@@ -1,35 +1,16 @@
-use std::cell::Cell;
-use std::fs;
-use std::io::Write;
-
 use csv::ReaderBuilder;
 use actix_web::{
     dev, error, multipart, Error, FutureResponse,
     HttpMessage, HttpRequest, HttpResponse,
 };
-
+use models::{NewWineRecommendation, create_wine_recommendations};
+use establish_connection;
 use futures::future;
 use futures::{Future, Stream};
 
-#[derive(Debug, Deserialize)]
-struct WineRecommendationRecord {
-    country: String,
-    region: String,
-    designation_of_origin: String,
-    producer: String,
-    rating: i32,
-    color: String,
-    grape_variety: String
-}
-
-pub fn save_file(
+pub fn save_records(
     field: multipart::Field<dev::Payload>,
-) -> Box<Future<Item = i64, Error = error::Error>> {
-    let file_path_string = "upload.png";
-    let mut file = match fs::File::create(file_path_string) {
-        Ok(file) => file,
-        Err(e) => return Box::new(future::err(error::ErrorInternalServerError(e))),
-    };
+) -> Box<Future<Item = bool, Error = error::Error>> {
     Box::new(
         field
             .fold(vec![], |mut acc, bytes| -> Box<Future<Item = Vec<u8>, Error = error::MultipartError>> {
@@ -37,29 +18,29 @@ pub fn save_file(
                     acc.push(byte);
                 }
                 Box::new(future::ok(acc))
-            }).map_err(|e| {
-                error::ErrorInternalServerError("This didn't work")
             })
             .and_then(|result| {
-                // println!("result: {}", result);
                 let mut rdr = ReaderBuilder::new()
                     .delimiter(b';')
                     .from_reader(&result[..]);
-                for r in rdr.records() {
-                    let record = r.unwrap();
-                    println!("{:?}", record);
-                }
-                future::ok(200)
+                let wine_recommendations: Vec<NewWineRecommendation> = rdr.deserialize().map(|r|{
+                    r.unwrap()
+                }).collect();
+                let connection = establish_connection();
+                create_wine_recommendations(&connection, &wine_recommendations);
+                future::ok(true)
+            }).map_err(|_| {
+                error::ErrorInternalServerError("This didn't work")
             })
     )
 }
 
 pub fn handle_multipart_item(
     item: multipart::MultipartItem<dev::Payload>,
-) -> Box<Stream<Item = i64, Error = Error>> {
+) -> Box<Stream<Item = bool, Error = Error>> {
     match item {
         multipart::MultipartItem::Field(field) => {
-            Box::new(save_file(field).into_stream())
+            Box::new(save_records(field).into_stream())
         }
         multipart::MultipartItem::Nested(mp) => Box::new(
             mp.map_err(error::ErrorInternalServerError)

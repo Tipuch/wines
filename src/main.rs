@@ -5,6 +5,7 @@ extern crate reqwest;
 extern crate dotenv;
 extern crate futures;
 extern crate csv;
+extern crate serde;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate diesel;
 extern crate bigdecimal;
@@ -28,6 +29,9 @@ mod types {
     use diesel::serialize;
     use diesel::serialize::{Output, ToSql, IsNull};
     use std::io::Write;
+    use std::fmt;
+    use serde::{Deserialize, Deserializer};
+    use serde::de::{self, Visitor};
 
     #[derive(SqlType)]
     #[postgres(type_name = "wine_color")]
@@ -39,6 +43,38 @@ mod types {
         Red,
         White,
         Pink
+    }
+
+    struct WineColorVisitor;
+
+    impl<'de> Visitor<'de> for WineColorVisitor {
+        type Value = WineColorEnum;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a lowercase string red, white or pink.")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            match value {
+                "red" => Ok(WineColorEnum::Red),
+                "white" => Ok(WineColorEnum::White),
+                "pink" => Ok(WineColorEnum::Pink),
+                _ => Err(de::Error::custom(format!("invalid wine color: {}", value)))
+            }
+        }
+
+    }
+
+    impl<'de> Deserialize<'de> for WineColorEnum {
+        fn deserialize<D>(deserializer: D) -> Result<WineColorEnum, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserializer.deserialize_str(WineColorVisitor)
+        }
     }
 
     impl ToSql<WineColor, Pg> for WineColorEnum {

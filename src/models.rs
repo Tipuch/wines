@@ -2,6 +2,7 @@ use bigdecimal::BigDecimal;
 use diesel;
 use diesel::query_dsl::RunQueryDsl;
 use diesel::prelude::PgConnection;
+use std::error::Error;
 use schema::saq_wines;
 use schema::wine_recommendations;
 use types::WineColorEnum;
@@ -76,34 +77,31 @@ pub struct WineRecommendation {
     pub grape_variety: String
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Deserialize)]
 #[table_name="wine_recommendations"]
-pub struct NewWineRecommendation<'a> {
-    pub country: &'a str,
-    pub region: &'a str,
-    pub designation_of_origin: &'a str,
-    pub producer: &'a str,
-    pub rating: &'a i32,
-    pub color: &'a WineColorEnum,
-    pub grape_variety: &'a str
+pub struct NewWineRecommendation {
+    pub country: String,
+    pub region: String,
+    pub designation_of_origin: String,
+    pub producer: String,
+    pub rating: i32,
+    pub color: WineColorEnum,
+    pub grape_variety: String
 }
 
-pub fn create_wine_recommendation<'a>(conn: &PgConnection, country: &'a str, region: &'a str,
-designation_of_origin: &'a str, producer: &'a str, rating: &'a i32, color: &'a WineColorEnum,
-grape_variety: &'a str) -> WineRecommendation {
-
-    let new_wine_recommendation = NewWineRecommendation {
-        country: country,
-        region: region,
-        designation_of_origin: designation_of_origin,
-        producer: producer,
-        rating: rating,
-        color: color,
-        grape_variety: grape_variety
-    };
+pub fn create_wine_recommendations<'a>(conn: &PgConnection, new_wine_recommendations: &'a Vec<NewWineRecommendation>) -> Vec<WineRecommendation> {
 
     diesel::insert_into(wine_recommendations::table)
-        .values(&new_wine_recommendation)
-        .get_result(conn)
+        .values(new_wine_recommendations)
+        .get_results(conn)
         .expect("Error saving new wine recommendation.")
+}
+
+pub fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<Error>> {
+    match string {
+        "red" => Ok(WineColorEnum::Red),
+        "white" => Ok(WineColorEnum::White),
+        "pink" => Ok(WineColorEnum::Pink),
+        _ => Err("Unrecognized enum variant".into()),
+    }
 }
