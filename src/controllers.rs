@@ -5,6 +5,8 @@ use actix_web::{
 };
 use models::{NewWineRecommendation, create_wine_recommendations};
 use establish_connection;
+use crawler::crawl_saq;
+use std::thread;
 use futures::future;
 use futures::{Future, Stream};
 
@@ -63,6 +65,14 @@ pub fn upload(req: HttpRequest) -> FutureResponse<HttpResponse> {
                 e
             }),
     )
+}
+
+pub fn crawl_saq_controller(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
+    thread::spawn(move || {
+        let origin_url = String::from("https://www.saq.com/webapp/wcs/stores/servlet/SearchDisplay?pageSize=20&searchTerm=*&catalogId=50000&orderBy=1&facet=adi_f9%3A%221%22%7Cadi_f9%3A%221%22&categoryIdentifier=06&beginIndex=0&langId=-1&showOnly=product&categoryId=39919&storeId=20002&metaData=");
+        crawl_saq(&origin_url);
+    });
+    Ok(HttpResponse::Ok().body("Crawl has been started"))
 }
 
 pub fn index(_req: HttpRequest) -> Result<HttpResponse, error::Error> {

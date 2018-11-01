@@ -11,11 +11,12 @@ extern crate serde;
 extern crate bigdecimal;
 mod schema;
 mod models;
+mod crawler;
 mod controllers;
 use actix_web::{
     http, middleware, server, App
 };
-use controllers::{index, upload};
+use controllers::{index, upload, crawl_saq_controller};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
@@ -113,6 +114,8 @@ fn main() {
         .resource("/", |r| {
             r.method(http::Method::GET).with(index);
             r.method(http::Method::POST).with(upload);
+        }).resource("/crawl/", |r| {
+            r.method(http::Method::POST).with(crawl_saq_controller);
         })})
         .bind("127.0.0.1:8080")
         .unwrap()

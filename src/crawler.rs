@@ -1,16 +1,13 @@
 use reqwest;
 use reqwest::Result as ReqwestResult;
 use establish_connection;
-use types::WineColorEnum;
 use models::{create_saq_wine, parse_wine_color};
 use std::str::FromStr;
-use std::error::Error;
 use bigdecimal::BigDecimal;
 use select::document::Document;
 use select::node::Node;
 use select::predicate::{Predicate, Attr, Class, Name};
 
-pub const PAGE_SIZE: u8 = 20;
 
 fn get_document(url: &String) -> ReqwestResult<String> {
     let client = reqwest::Client::builder()
