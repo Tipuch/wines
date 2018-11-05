@@ -59,7 +59,7 @@ mod types {
         where
             E: de::Error,
         {
-            match value {
+            match value.to_lowercase().as_ref() {
                 "red" => Ok(WineColorEnum::Red),
                 "white" => Ok(WineColorEnum::White),
                 "pink" => Ok(WineColorEnum::Pink),

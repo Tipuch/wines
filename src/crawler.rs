@@ -27,6 +27,7 @@ pub fn crawl_saq(origin_url: &String) {
         document = Document::from(&*get_document(&next_page.unwrap()).unwrap());
         next_page = get_next_page(&document);
     }
+    println!("Success ! :)");
 }
 
 fn get_next_page(document: &Document) -> Option<String> {
@@ -57,6 +58,7 @@ fn crawl_saq_wine(detail_page_url: &str) {
     if region_option.is_some() {
         region = parse_wine_info(&document, "Region", Box::new(default_parsing_func)).unwrap();
     }
+    let available_online = document.find(Attr("alt", "This product is not available online")).next().is_none();
     let mut designation_of_origin = String::from("");
     let designation_of_origin_option = parse_wine_info(&document, "Designation of origin", Box::new(default_parsing_func));
     let regulated_designation_option = parse_wine_info(&document, "Regulated designation", Box::new(default_parsing_func));
@@ -91,7 +93,8 @@ fn crawl_saq_wine(detail_page_url: &str) {
     create_saq_wine(
         &connection, &name, &country, &region, &designation_of_origin, &regulated_designation,
         &producer, &BigDecimal::from_str(&volume).unwrap(), &BigDecimal::from_str(&price).unwrap(),
-        &alcohol_percent, &parse_wine_color(&wine_color.to_lowercase()).unwrap(), &parse_grape_varieties(&document)
+        &alcohol_percent, &parse_wine_color(&wine_color.to_lowercase()).unwrap(), &parse_grape_varieties(&document),
+        &available_online
     );
     println!("SAQ Wine: {} was added", name);
 }

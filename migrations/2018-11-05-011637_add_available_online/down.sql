@@ -1,0 +1,1 @@
+ALTER TABLE saq_wines DROP COLUMN available_online;

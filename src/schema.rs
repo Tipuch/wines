@@ -14,6 +14,7 @@ table! {
         alcohol_percent -> Numeric,
         color -> WineColor,
         grape_varieties -> Array<Text>,
+        available_online -> Bool,
     }
 }
 

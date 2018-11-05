@@ -21,7 +21,8 @@ pub struct SaqWine {
     pub price: BigDecimal,
     pub alcohol_percent: BigDecimal,
     pub color: WineColorEnum,
-    pub grape_varieties: Vec<String>
+    pub grape_varieties: Vec<String>,
+    pub available_online: bool
 }
 
 #[derive(Insertable)]
@@ -37,13 +38,14 @@ pub struct NewSaqWine<'a> {
     pub price: &'a BigDecimal,
     pub alcohol_percent: &'a BigDecimal,
     pub color: &'a WineColorEnum,
-    pub grape_varieties: &'a Vec<String>
+    pub grape_varieties: &'a Vec<String>,
+    pub available_online: &'a bool
 }
 
 pub fn create_saq_wine<'a>(conn: &PgConnection, name: &'a str, country: &'a str, region: &'a str, 
 designation_of_origin: &'a str, regulated_designation: &'a bool, producer: &'a str,
 volume: &'a BigDecimal, price: &'a BigDecimal, alcohol_percent: &'a BigDecimal,
-color: &'a WineColorEnum, grape_varieties: &'a Vec<String>) -> SaqWine {
+color: &'a WineColorEnum, grape_varieties: &'a Vec<String>, available_online: &'a bool) -> SaqWine {
 
     let new_saq_wine = NewSaqWine {
         name: name,
@@ -56,7 +58,8 @@ color: &'a WineColorEnum, grape_varieties: &'a Vec<String>) -> SaqWine {
         price: price,
         alcohol_percent: alcohol_percent,
         color: color,
-        grape_varieties: grape_varieties
+        grape_varieties: grape_varieties,
+        available_online: available_online
     };
 
     diesel::insert_into(saq_wines::table)
