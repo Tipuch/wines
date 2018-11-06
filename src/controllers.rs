@@ -3,12 +3,22 @@ use actix_web::{
     dev, error, multipart, Error, FutureResponse,
     HttpMessage, HttpRequest, HttpResponse,
 };
-use models::{NewWineRecommendation, create_wine_recommendations};
+use models::{
+    NewWineRecommendation, create_wine_recommendations,
+    compute_salt, hash_password, create_user
+};
 use establish_connection;
 use crawler::crawl_saq;
 use std::thread;
 use futures::future;
 use futures::{Future, Stream};
+
+#[derive(Deserialize)]
+struct UserForm {
+    email: String,
+    admin: bool,
+    password: String
+}
 
 pub fn save_records(
     field: multipart::Field<dev::Payload>,
@@ -87,4 +97,18 @@ pub fn index(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
     </html>"#;
 
     Ok(HttpResponse::Ok().body(html))
+}
+
+pub fn register(user_form: Json<UserForm>) -> Result<HttpResponse, error::Error> {
+    let salt = compute_salt(&user_form.email);
+    let password = hash_password(&user_form.password, &salt);
+    let user = create_user(
+        &user_form.email,
+        &user_form.admin,
+        &salt,
+        &password
+    );
+    Ok(HttpResponse::Ok().body(format!(
+        "User with email {} has been created successfully!", user.email
+    )))
 }

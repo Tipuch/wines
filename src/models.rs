@@ -3,8 +3,9 @@ use diesel;
 use diesel::query_dsl::RunQueryDsl;
 use diesel::prelude::PgConnection;
 use std::error::Error;
-use schema::saq_wines;
-use schema::wine_recommendations;
+use std::env;
+use schema::{saq_wines, wine_recommendations, users};
+use argon2rs::argon2i_simple;
 use types::WineColorEnum;
 
 #[derive(Queryable)]
@@ -107,4 +108,44 @@ pub fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<Error>> {
         "pink" => Ok(WineColorEnum::Pink),
         _ => Err("Unrecognized enum variant".into()),
     }
+}
+
+#[derive(Queryable)]
+pub struct User {
+    pub email: String,
+    pub admin: bool,
+    pub salt: Vec<u8>,
+    pub password: Vec<u8>
+}
+
+#[derive(Insertable, Deserialize)]
+#[table_name="users"]
+pub struct NewUser<'a> {
+    pub email: &'a str,
+    pub admin: &'a bool,
+    pub salt: &'a Vec<u8>,
+    pub password: &'a Vec<u8>
+}
+
+pub fn compute_salt(email: &String) -> Vec<u8> {
+    let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
+    argon2i_simple(email, &secret_key).to_vec()
+}
+
+pub fn hash_password(password: &String, salt: &Vec<u8>) -> Vec<u8> {
+    argon2i_simple(password, &String::from_utf8(salt).unwrap()).to_vec()
+}
+
+pub fn create_user<'a>(conn: &PgConnection, email: &'a str, admin: &'a bool,
+salt: &'a Vec<u8>, password: &'a Vec<u8>) -> User{
+    let user = NewUser {
+        email: email,
+        admin: admin,
+        salt: salt,
+        password: password
+    };
+    diesel::insert_into(users::table)
+        .values(&user)
+        .get_result(conn)
+        .expect("Error saving new User.")
 }

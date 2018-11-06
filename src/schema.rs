@@ -1,6 +1,7 @@
 table! {
     use types::WineColor;
     use diesel::sql_types::*;
+
     saq_wines (id) {
         id -> Int4,
         name -> Varchar,
@@ -19,8 +20,19 @@ table! {
 }
 
 table! {
+    users (id) {
+        id -> Int4,
+        email -> Varchar,
+        admin -> Bool,
+        salt -> Bytea,
+        password -> Bytea,
+    }
+}
+
+table! {
     use types::WineColor;
     use diesel::sql_types::*;
+
     wine_recommendations (id) {
         id -> Int4,
         country -> Varchar,
@@ -35,5 +47,6 @@ table! {
 
 allow_tables_to_appear_in_same_query!(
     saq_wines,
+    users,
     wine_recommendations,
 );

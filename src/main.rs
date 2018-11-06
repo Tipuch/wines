@@ -6,6 +6,7 @@ extern crate dotenv;
 extern crate futures;
 extern crate csv;
 extern crate serde;
+extern crate argon2rs;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate diesel;
 extern crate bigdecimal;
@@ -16,7 +17,7 @@ mod controllers;
 use actix_web::{
     http, middleware, server, App
 };
-use controllers::{index, upload, crawl_saq_controller};
+use controllers::{index, upload, crawl_saq_controller, register};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
@@ -116,8 +117,10 @@ fn main() {
             r.method(http::Method::POST).with(upload);
         }).resource("/crawl/", |r| {
             r.method(http::Method::POST).with(crawl_saq_controller);
-        })})
-        .bind("127.0.0.1:8080")
+        }).resource("/users/", |r| {
+            r.method(http::Method::POST).with(register);
+        })
+        }).bind("127.0.0.1:8080")
         .unwrap()
         .run();
 }
