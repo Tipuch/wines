@@ -1,6 +1,6 @@
 use csv::ReaderBuilder;
 use actix_web::{
-    dev, error, http, multipart, Error, FutureResponse,
+    dev, error, http, multipart, Error, FutureResponse, ResponseError,
     HttpMessage, HttpRequest, HttpResponse, Json, FromRequest
 };
 use actix_web::http::header::AUTHORIZATION;
@@ -10,9 +10,10 @@ use models::{
     NewWineRecommendation, create_wine_recommendations,
     compute_salt, hash_password, create_user, User
 };
-use errors::LoginError;
+use errors::{LoginError};
 use establish_connection;
 use crawler::crawl_saq;
+use dotenv::dotenv;
 use std::{thread, env};
 use futures::future;
 use futures::{Future, Stream};
@@ -109,13 +110,17 @@ pub fn index(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
     Ok(HttpResponse::Ok().body(html))
 }
 
-pub fn register(req: HttpRequest) -> Result<HttpResponse, error::Error> {
+pub fn register(req: HttpRequest) -> FutureResponse<HttpResponse> {
     let headers = req.headers();
+    dotenv().ok();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
     if !headers.contains_key(AUTHORIZATION) || headers[AUTHORIZATION] != secret_key {
-        return Ok(HttpResponse::new(http::StatusCode::FORBIDDEN));
+        return Box::new(future::ok(HttpResponse::new(http::StatusCode::FORBIDDEN)));
     }
-    Json::<UserForm>::extract(&req).then(|user_form_result| {
+    Box::new(Json::<UserForm>::extract(&req).then(|user_form_result| {
+        if user_form_result.is_err() {
+            return future::ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
+        }
         let user_form = user_form_result.unwrap();
         let connection = establish_connection();
         let salt = compute_salt(&user_form.email);
@@ -127,15 +132,18 @@ pub fn register(req: HttpRequest) -> Result<HttpResponse, error::Error> {
             &salt,
             &password
         );
-        Ok(HttpResponse::Ok().body(format!(
+        future::ok(HttpResponse::Ok().body(format!(
             "User with email {} has been created successfully!", user.email
         )))
-    }).wait()
+    }))
 }
 
-pub fn login(req: HttpRequest) -> Result<HttpResponse, LoginError> {
+pub fn login(req: HttpRequest) -> FutureResponse<HttpResponse> {
     use schema::users::dsl::*;
-    Json::<LoginForm>::extract(&req).then(|login_form_result|{
+    Box::new(Json::<LoginForm>::extract(&req).then(move |login_form_result| {
+        if login_form_result.is_err() {
+            return future::ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
+        }
         let login_form = login_form_result.unwrap();
         let conn = establish_connection();
         let user = users
@@ -144,10 +152,10 @@ pub fn login(req: HttpRequest) -> Result<HttpResponse, LoginError> {
         if hash_password(&login_form.password, user.salt) == user.password {
             // congrats you're in :)
             req.remember(user.email);
-            return Ok(HttpResponse::Ok().finish());
+            return future::ok(HttpResponse::Ok().finish());
         }
-        Err(LoginError::ValidationError)
-    }).wait()
+        future::ok(LoginError::ValidationError.error_response())
+    }))
 }
 
 pub fn logout(req: HttpRequest) -> Result<HttpResponse, error::Error> {
