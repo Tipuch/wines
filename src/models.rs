@@ -6,7 +6,7 @@ use std::error::Error;
 use dotenv::dotenv;
 use std::env;
 use schema::{saq_wines, wine_recommendations, users};
-use argon2rs::argon2i_simple;
+use argon2rs::{defaults, Argon2, Variant, argon2i_simple};
 use types::WineColorEnum;
 
 #[derive(Queryable)]
@@ -129,14 +129,17 @@ pub struct NewUser<'a> {
     pub password: &'a Vec<u8>
 }
 
+pub fn hash_password(password: &String, salt: Vec<u8>) -> Vec<u8> {
+    let mut out = [0; defaults::LENGTH];
+    let a2 = Argon2::default(Variant::Argon2i);
+    a2.hash(&mut out, password.as_bytes(), &salt, &[], &[]);
+    out.to_vec()
+}
+
 pub fn compute_salt(email: &String) -> Vec<u8> {
     dotenv().ok();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
     argon2i_simple(email, &secret_key).to_vec()
-}
-
-pub fn hash_password(password: &String, salt: Vec<u8>) -> Vec<u8> {
-    argon2i_simple(password, &String::from_utf8(salt).unwrap()).to_vec()
 }
 
 pub fn create_user<'a>(conn: &PgConnection, email: &'a str, admin: &'a bool,
