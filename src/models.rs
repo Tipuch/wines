@@ -112,13 +112,14 @@ pub fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<Error>> {
 
 #[derive(Queryable)]
 pub struct User {
+    pub id: i32,
     pub email: String,
     pub admin: bool,
     pub salt: Vec<u8>,
     pub password: Vec<u8>
 }
 
-#[derive(Insertable, Deserialize)]
+#[derive(Insertable)]
 #[table_name="users"]
 pub struct NewUser<'a> {
     pub email: &'a str,
@@ -132,7 +133,7 @@ pub fn compute_salt(email: &String) -> Vec<u8> {
     argon2i_simple(email, &secret_key).to_vec()
 }
 
-pub fn hash_password(password: &String, salt: &Vec<u8>) -> Vec<u8> {
+pub fn hash_password(password: &String, salt: Vec<u8>) -> Vec<u8> {
     argon2i_simple(password, &String::from_utf8(salt).unwrap()).to_vec()
 }
 

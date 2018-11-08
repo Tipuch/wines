@@ -45,7 +45,12 @@ fn get_next_page(document: &Document) -> Option<String> {
 
 fn crawl_saq_wine(detail_page_url: &str) {
     let connection = establish_connection();
-    let document = Document::from(&*get_document(&String::from(detail_page_url)).unwrap());
+    let response = get_document(&String::from(detail_page_url));
+    if response.is_err() {
+        println!("There was an error fetching wine {}", detail_page_url);
+        return;
+    }
+    let document = Document::from(&*response.unwrap());
 
     let name = document.find(Class("product-description-title")).next().unwrap().text();
     let price = parse_price(&document);

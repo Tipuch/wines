@@ -1,22 +1,32 @@
 use csv::ReaderBuilder;
 use actix_web::{
-    dev, error, multipart, Error, FutureResponse,
-    HttpMessage, HttpRequest, HttpResponse,
+    dev, error, http, multipart, Error, FutureResponse,
+    HttpMessage, HttpRequest, HttpResponse, Json, FromRequest
 };
+use actix_web::http::header::AUTHORIZATION;
+use actix_web::middleware::identity::RequestIdentity;
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use models::{
     NewWineRecommendation, create_wine_recommendations,
-    compute_salt, hash_password, create_user
+    compute_salt, hash_password, create_user, User
 };
+use errors::LoginError;
 use establish_connection;
 use crawler::crawl_saq;
-use std::thread;
+use std::{thread, env};
 use futures::future;
 use futures::{Future, Stream};
 
 #[derive(Deserialize)]
-struct UserForm {
+pub struct UserForm {
     email: String,
     admin: bool,
+    password: String
+}
+
+#[derive(Deserialize)]
+pub struct LoginForm {
+    email: String,
     password: String
 }
 
@@ -99,16 +109,48 @@ pub fn index(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
     Ok(HttpResponse::Ok().body(html))
 }
 
-pub fn register(user_form: Json<UserForm>) -> Result<HttpResponse, error::Error> {
-    let salt = compute_salt(&user_form.email);
-    let password = hash_password(&user_form.password, &salt);
-    let user = create_user(
-        &user_form.email,
-        &user_form.admin,
-        &salt,
-        &password
-    );
-    Ok(HttpResponse::Ok().body(format!(
-        "User with email {} has been created successfully!", user.email
-    )))
+pub fn register(req: HttpRequest) -> Result<HttpResponse, error::Error> {
+    let headers = req.headers();
+    let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
+    if !headers.contains_key(AUTHORIZATION) || headers[AUTHORIZATION] != secret_key {
+        return Ok(HttpResponse::new(http::StatusCode::FORBIDDEN));
+    }
+    Json::<UserForm>::extract(&req).then(|user_form_result| {
+        let user_form = user_form_result.unwrap();
+        let connection = establish_connection();
+        let salt = compute_salt(&user_form.email);
+        let password = hash_password(&user_form.password, salt.clone());
+        let user = create_user(
+            &connection,
+            &user_form.email,
+            &user_form.admin,
+            &salt,
+            &password
+        );
+        Ok(HttpResponse::Ok().body(format!(
+            "User with email {} has been created successfully!", user.email
+        )))
+    }).wait()
+}
+
+pub fn login(req: HttpRequest) -> Result<HttpResponse, LoginError> {
+    use schema::users::dsl::*;
+    Json::<LoginForm>::extract(&req).then(|login_form_result|{
+        let login_form = login_form_result.unwrap();
+        let conn = establish_connection();
+        let user = users
+            .filter(email.eq(login_form.email.clone()))
+            .first::<User>(&conn).map_err(|_e| LoginError::ValidationError).unwrap();
+        if hash_password(&login_form.password, user.salt) == user.password {
+            // congrats you're in :)
+            req.remember(user.email);
+            return Ok(HttpResponse::Ok().finish());
+        }
+        Err(LoginError::ValidationError)
+    }).wait()
+}
+
+pub fn logout(req: HttpRequest) -> Result<HttpResponse, error::Error> {
+    req.forget();
+    Ok(HttpResponse::Ok().finish())
 }
