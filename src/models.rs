@@ -114,7 +114,7 @@ pub fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<Error>> {
     }
 }
 
-#[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Clone)]
 pub struct User {
     pub id: i32,
     pub email: String,

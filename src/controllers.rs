@@ -31,9 +31,9 @@ pub struct LoginForm {
     password: String
 }
 
-pub fn save_records(
-    field: multipart::Field<dev::Payload>,
-) -> Box<Future<Item = bool, Error = error::Error>> {
+fn save_records(
+    field: multipart::Field<dev::Payload>
+) -> Box<Future<Item = Vec<NewWineRecommendation>, Error = error::Error>> {
     Box::new(
         field
             .fold(vec![], |mut acc, bytes| -> Box<Future<Item = Vec<u8>, Error = error::MultipartError>> {
@@ -49,18 +49,16 @@ pub fn save_records(
                 let wine_recommendations: Vec<NewWineRecommendation> = rdr.deserialize().map(|r|{
                     r.unwrap()
                 }).collect();
-                let connection = establish_connection();
-                create_wine_recommendations(&connection, &wine_recommendations);
-                future::ok(true)
+                future::ok(wine_recommendations)
             }).map_err(|_| {
                 error::ErrorInternalServerError("This didn't work")
             })
     )
 }
 
-pub fn handle_multipart_item(
-    item: multipart::MultipartItem<dev::Payload>,
-) -> Box<Stream<Item = bool, Error = Error>> {
+fn handle_multipart_item(
+    item: multipart::MultipartItem<dev::Payload>
+) -> Box<Stream<Item = Vec<NewWineRecommendation>, Error = Error>> {
     match item {
         multipart::MultipartItem::Field(field) => {
             Box::new(save_records(field).into_stream())
@@ -74,13 +72,31 @@ pub fn handle_multipart_item(
 }
 
 pub fn upload(req: HttpRequest) -> FutureResponse<HttpResponse> {
+    use schema::users::dsl::*;
+    let identity = req.identity();
+    let mut user = None;
+    let conn = establish_connection();
+    if identity.is_some() {
+        user = Some(users
+            .filter(email.eq(identity.unwrap()))
+            .first::<User>(&conn).unwrap());
+    }
+    
     Box::new(
         req.multipart()
             .map_err(error::ErrorInternalServerError)
             .map(handle_multipart_item)
             .flatten()
+            .map(move |mut wine_recommendations| {
+                if user.is_some() {
+                    for wine_reco in wine_recommendations.iter_mut() {
+                        wine_reco.user_id = Some(user.clone().unwrap().id);
+                    }
+                }
+                create_wine_recommendations(&conn, &wine_recommendations);
+            })
             .collect()
-            .map(|sizes| HttpResponse::Ok().json(sizes))
+            .map(|_| HttpResponse::Ok().finish())
             .map_err(|e| {
                 println!("failed: {}", e);
                 e
