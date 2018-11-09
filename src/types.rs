@@ -5,7 +5,7 @@ use diesel::serialize;
 use diesel::serialize::{Output, ToSql, IsNull};
 use std::io::Write;
 use std::fmt;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{self, Visitor};
 
 #[derive(SqlType)]
@@ -49,6 +49,19 @@ impl<'de> Deserialize<'de> for WineColorEnum {
         D: Deserializer<'de>,
     {
         deserializer.deserialize_str(WineColorVisitor)
+    }
+}
+
+impl Serialize for WineColorEnum {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match *self {
+            WineColorEnum::Red => serializer.serialize_str("red"),
+            WineColorEnum::White => serializer.serialize_str("white"),
+            WineColorEnum::Pink => serializer.serialize_str("pink")
+        }
     }
 }
 

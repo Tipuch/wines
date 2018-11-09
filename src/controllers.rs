@@ -94,9 +94,10 @@ pub fn upload(req: HttpRequest) -> FutureResponse<HttpResponse> {
                     }
                 }
                 create_wine_recommendations(&conn, &wine_recommendations);
+                wine_recommendations
             })
             .collect()
-            .map(|_| HttpResponse::Ok().finish())
+            .map(|wine_recommendations| HttpResponse::Ok().json(wine_recommendations))
             .map_err(|e| {
                 println!("failed: {}", e);
                 e

@@ -84,7 +84,7 @@ pub struct WineRecommendation {
     pub user_id: Option<i32>
 }
 
-#[derive(Insertable, Deserialize)]
+#[derive(Insertable, Serialize, Deserialize)]
 #[table_name="wine_recommendations"]
 pub struct NewWineRecommendation {
     pub country: String,
