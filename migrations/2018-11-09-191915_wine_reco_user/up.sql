@@ -1,0 +1,1 @@
+ALTER TABLE wine_recommendations ADD COLUMN user_id integer REFERENCES users (id) ON DELETE CASCADE;

@@ -1,7 +1,6 @@
 table! {
     use types::WineColor;
     use diesel::sql_types::*;
-
     saq_wines (id) {
         id -> Int4,
         name -> Varchar,
@@ -32,7 +31,6 @@ table! {
 table! {
     use types::WineColor;
     use diesel::sql_types::*;
-
     wine_recommendations (id) {
         id -> Int4,
         country -> Varchar,
@@ -42,8 +40,11 @@ table! {
         rating -> Int4,
         color -> WineColor,
         grape_variety -> Varchar,
+        user_id -> Nullable<Int4>,
     }
 }
+
+joinable!(wine_recommendations -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
     saq_wines,

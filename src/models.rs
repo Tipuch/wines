@@ -70,7 +70,8 @@ color: &'a WineColorEnum, grape_varieties: &'a Vec<String>, available_online: &'
         .expect("Error saving new SAQ Wine.")
 }
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
+#[belongs_to(User)]
 pub struct WineRecommendation {
     pub id: i32,
     pub country: String,
@@ -79,7 +80,8 @@ pub struct WineRecommendation {
     pub producer: String,
     pub rating: i32,
     pub color: WineColorEnum,
-    pub grape_variety: String
+    pub grape_variety: String,
+    pub user_id: Option<i32>
 }
 
 #[derive(Insertable, Deserialize)]
@@ -91,7 +93,8 @@ pub struct NewWineRecommendation {
     pub producer: String,
     pub rating: i32,
     pub color: WineColorEnum,
-    pub grape_variety: String
+    pub grape_variety: String,
+    pub user_id: Option<i32>
 }
 
 pub fn create_wine_recommendations<'a>(conn: &PgConnection, new_wine_recommendations: &'a Vec<NewWineRecommendation>) -> Vec<WineRecommendation> {
@@ -111,7 +114,7 @@ pub fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<Error>> {
     }
 }
 
-#[derive(Queryable)]
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
 pub struct User {
     pub id: i32,
     pub email: String,
