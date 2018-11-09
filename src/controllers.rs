@@ -146,9 +146,13 @@ pub fn login(req: HttpRequest) -> FutureResponse<HttpResponse> {
         }
         let login_form = login_form_result.unwrap();
         let conn = establish_connection();
-        let user = users
+        let user_result = users
             .filter(email.eq(login_form.email.clone()))
-            .first::<User>(&conn).map_err(|_e| LoginError::ValidationError).unwrap();
+            .first::<User>(&conn);
+        if user_result.is_err() {
+            return future::ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
+        }
+        let user = user_result.unwrap();
         if hash_password(&login_form.password, user.salt) == user.password {
             // congrats you're in :)
             req.remember(user.email);
