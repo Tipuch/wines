@@ -197,7 +197,7 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
             .filter(users::email.eq(identity.unwrap()))
             .first::<User>(&conn).unwrap());
     }
-    let wines = saq::table.inner_join(
+    let wines_query = saq::table.inner_join(
         recos::table.on(recos::country.eq("").or(saq::country.ilike(recos::country)).and(
             recos::region.eq("").or(saq::region.ilike(recos::region)).and(
                 recos::designation_of_origin.eq("").or(saq::designation_of_origin.ilike(recos::designation_of_origin)).and(
@@ -210,9 +210,14 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
             )
         )
     ))).select((saq::name, saq::country, saq::region, saq::designation_of_origin, saq::producer, saq::color, saq::price, recos::rating))
-    .order(saq::price/saq::volume)
-    .load::<(String, String, String, String, String, WineColorEnum, BigDecimal, i32)>(&conn).unwrap();
-
+    .order(saq::price/saq::volume);
+    let wines: Vec<(String, String, String, String, String, WineColorEnum, BigDecimal, i32)>;
+    if user.is_some() {
+        wines = wines_query.filter(recos::user_id.eq(user.unwrap().id)).load(&conn).unwrap();
+    } else {
+        wines = wines_query.load(&conn).unwrap();
+    }
+    
     let results: Vec<(&String, &String, &String, &String, &String, &WineColorEnum, String, &i32)> = wines.iter().map(|wine| {
         (&wine.0, &wine.1, &wine.2, &wine.3, &wine.4, &wine.5, format!("{}", &wine.6), &wine.7)
     }).collect();
