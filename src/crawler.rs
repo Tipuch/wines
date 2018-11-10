@@ -55,7 +55,7 @@ fn crawl_saq_wine(detail_page_url: &str) {
     let name = document.find(Class("product-description-title")).next().unwrap().text();
     let price = parse_price(&document);
     
-    let default_parsing_func = |node: &Node| {Some(String::from(node.text().trim()))};
+    let default_parsing_func = |node: &Node| {Some(node.text().trim().to_string())};
     // fetch info from detailed info in the web page.
     let country = parse_wine_info(&document, "Country", Box::new(default_parsing_func)).unwrap();
     let mut region = String::from("");
@@ -74,7 +74,10 @@ fn crawl_saq_wine(detail_page_url: &str) {
     }
     let producer = parse_wine_info(&document, "Producer", Box::new(|node: &Node| {
         let text = node.text();
-        Some(text[..text.find("\n").unwrap()].trim().to_string())
+        if text.contains("All products from this producer") {
+            return Some(text[..text.find("All products from this producer").unwrap()].trim().to_string());
+        }
+        Some(text.trim().to_string())
     })).unwrap();
 
     let volume = parse_wine_info(&document, "Size", Box::new(|node: &Node| {
