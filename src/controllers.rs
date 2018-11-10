@@ -1,16 +1,20 @@
 use csv::ReaderBuilder;
 use actix_web::{
     dev, error, http, multipart, Error, FutureResponse, ResponseError,
-    HttpMessage, HttpRequest, HttpResponse, Json, FromRequest
+    HttpMessage, HttpRequest, HttpResponse, Json, FromRequest, Query
 };
 use actix_web::http::header::AUTHORIZATION;
 use actix_web::middleware::identity::RequestIdentity;
-use diesel::{ExpressionMethods, PgTextExpressionMethods, BoolExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
+use diesel::{
+    ExpressionMethods, PgTextExpressionMethods, BoolExpressionMethods,
+    JoinOnDsl, QueryDsl, RunQueryDsl
+ };
 use diesel::pg::expression::dsl::any;
 use models::{
     NewWineRecommendation, create_wine_recommendations,
     compute_salt, hash_password, create_user, User
 };
+use schema::{users, wine_recommendations as recos, saq_wines as saq};
 use types::WineColorEnum;
 use bigdecimal::BigDecimal;
 use errors::{LoginError};
@@ -32,6 +36,11 @@ pub struct UserForm {
 pub struct LoginForm {
     email: String,
     password: String
+}
+
+#[derive(Deserialize)]
+pub struct WineCriteria {
+    min_rating: Option<i32>
 }
 
 fn save_records(
@@ -188,7 +197,11 @@ pub fn logout(req: HttpRequest) -> Result<HttpResponse, error::Error> {
 }
 
 pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error::Error> {
-    use schema::{users, wine_recommendations as recos, saq_wines as saq};
+    let wine_criteria_result = Query::<WineCriteria>::extract(&req);
+    if wine_criteria_result.is_err() {
+        return Ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
+    }
+    let wine_criteria = wine_criteria_result.unwrap();
     let identity = req.identity();
     let mut user = None;
     let conn = establish_connection();
@@ -197,7 +210,7 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
             .filter(users::email.eq(identity.unwrap()))
             .first::<User>(&conn).unwrap());
     }
-    let wines_query = saq::table.inner_join(
+    let mut wines_query = saq::table.inner_join(
         recos::table.on(recos::country.eq("").or(saq::country.ilike(recos::country)).and(
             recos::region.eq("").or(saq::region.ilike(recos::region)).and(
                 recos::designation_of_origin.eq("").or(saq::designation_of_origin.ilike(recos::designation_of_origin)).and(
@@ -210,13 +223,16 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
             )
         )
     ))).select((saq::name, saq::country, saq::region, saq::designation_of_origin, saq::producer, saq::color, saq::price, recos::rating))
-    .order(saq::price/saq::volume);
-    let wines: Vec<(String, String, String, String, String, WineColorEnum, BigDecimal, i32)>;
-    if user.is_some() {
-        wines = wines_query.filter(recos::user_id.eq(user.unwrap().id)).load(&conn).unwrap();
-    } else {
-        wines = wines_query.load(&conn).unwrap();
+    .order(saq::price/saq::volume).into_boxed();
+
+    if wine_criteria.min_rating.is_some() {
+        wines_query = wines_query.filter(recos::rating.ge(wine_criteria.min_rating.unwrap()));
     }
+    if user.is_some() {
+        wines_query = wines_query.filter(recos::user_id.eq(user.unwrap().id));
+    } 
+
+    let wines: Vec<(String, String, String, String, String, WineColorEnum, BigDecimal, i32)> = wines_query.load(&conn).unwrap();
     
     let results: Vec<(&String, &String, &String, &String, &String, &WineColorEnum, String, &i32)> = wines.iter().map(|wine| {
         (&wine.0, &wine.1, &wine.2, &wine.3, &wine.4, &wine.5, format!("{}", &wine.6), &wine.7)
