@@ -72,7 +72,10 @@ fn crawl_saq_wine(detail_page_url: &str) {
     if regulated_designation {
         designation_of_origin = designation_of_origin_option.unwrap();
     }
-    let producer = parse_wine_info(&document, "Producer", Box::new(default_parsing_func)).unwrap();
+    let producer = parse_wine_info(&document, "Producer", Box::new(|node: &Node| {
+        let text = node.text();
+        Some(text[..text.find("\n").unwrap()].trim().to_string())
+    })).unwrap();
 
     let volume = parse_wine_info(&document, "Size", Box::new(|node: &Node| {
         let volume_text = node.text();
