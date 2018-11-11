@@ -222,7 +222,7 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
                 )
             )
         )
-    ))).select((saq::name, saq::available_online, saq::country, saq::region, saq::designation_of_origin, saq::producer, saq::color, saq::price, recos::rating))
+    ))).select((saq::name, saq::available_online, saq::country, saq::region, saq::designation_of_origin, saq::producer, saq::color, saq::volume, saq::price, recos::rating))
     .order(saq::price/saq::volume).into_boxed();
 
     if wine_criteria.min_rating.is_some() {
@@ -232,10 +232,10 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
         wines_query = wines_query.filter(recos::user_id.eq(user.unwrap().id));
     } 
 
-    let wines: Vec<(String, bool, String, String, String, String, WineColorEnum, BigDecimal, i32)> = wines_query.load(&conn).unwrap();
+    let wines: Vec<(String, bool, String, String, String, String, WineColorEnum, BigDecimal, BigDecimal, i32)> = wines_query.load(&conn).unwrap();
     
-    let results: Vec<(&String, &bool, &String, &String, &String, &String, &WineColorEnum, String, &i32)> = wines.iter().map(|wine| {
-        (&wine.0, &wine.1, &wine.2, &wine.3, &wine.4, &wine.5, &wine.6, format!("{}", &wine.7), &wine.8)
+    let results: Vec<(&String, &bool, &String, &String, &String, &String, &WineColorEnum, String, String, &i32)> = wines.iter().map(|wine| {
+        (&wine.0, &wine.1, &wine.2, &wine.3, &wine.4, &wine.5, &wine.6, format!("{}", &wine.7), format!("{} ml", &wine.8), &wine.9)
     }).collect();
 
     Ok(HttpResponse::Ok().json(results))
