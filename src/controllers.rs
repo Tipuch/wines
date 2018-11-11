@@ -235,7 +235,7 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
     let wines: Vec<(String, bool, String, String, String, String, WineColorEnum, BigDecimal, BigDecimal, i32)> = wines_query.load(&conn).unwrap();
     
     let results: Vec<(&String, &bool, &String, &String, &String, &String, &WineColorEnum, String, String, &i32)> = wines.iter().map(|wine| {
-        (&wine.0, &wine.1, &wine.2, &wine.3, &wine.4, &wine.5, &wine.6, format!("{}", &wine.7), format!("{} ml", &wine.8), &wine.9)
+        (&wine.0, &wine.1, &wine.2, &wine.3, &wine.4, &wine.5, &wine.6, format!("{} ml", &wine.7), format!("{}", &wine.8), &wine.9)
     }).collect();
 
     Ok(HttpResponse::Ok().json(results))
