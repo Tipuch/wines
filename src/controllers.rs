@@ -7,7 +7,7 @@ use actix_web::http::header::AUTHORIZATION;
 use actix_web::middleware::identity::RequestIdentity;
 use diesel::{
     ExpressionMethods, PgTextExpressionMethods, BoolExpressionMethods,
-    JoinOnDsl, QueryDsl, RunQueryDsl
+    JoinOnDsl, QueryDsl, RunQueryDsl, TextExpressionMethods
  };
 use diesel::pg::expression::dsl::any;
 use models::{
@@ -213,7 +213,7 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
     let mut wines_query = saq::table.inner_join(
         recos::table.on(recos::country.eq("").or(saq::country.ilike(recos::country)).and(
             recos::region.eq("").or(saq::region.ilike(recos::region)).and(
-                recos::designation_of_origin.eq("").or(saq::designation_of_origin.ilike(recos::designation_of_origin)).and(
+                recos::designation_of_origin.eq("").or(saq::designation_of_origin.ilike(recos::designation_of_origin.concat("%"))).and(
                     recos::producer.eq("").or(saq::producer.ilike(recos::producer)).and(
                         recos::grape_variety.eq("").or(recos::grape_variety.ilike(any(saq::grape_varieties)).and(
                             saq::color.eq(recos::color)
