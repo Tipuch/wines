@@ -36,7 +36,8 @@ pub fn establish_connection() -> PgConnection {
 }
 
 fn main() {
-    let domain: String = std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
+    dotenv().ok();
+    let domain: String = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 
     server::new(move || {
