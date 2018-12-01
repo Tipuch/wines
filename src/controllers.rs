@@ -22,6 +22,7 @@ use establish_connection;
 use crawler::crawl_saq;
 use dotenv::dotenv;
 use std::{thread, env};
+use std::str::FromStr;
 use futures::future;
 use futures::{Future, Stream};
 
@@ -38,9 +39,11 @@ pub struct LoginForm {
     password: String
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct WineCriteria {
-    min_rating: Option<i32>
+    min_rating: Option<i32>,
+    max_price: Option<String>,
+    color: Option<WineColorEnum>
 }
 
 fn save_records(
@@ -224,9 +227,18 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
         )
     ))).select((saq::name, saq::available_online, saq::country, saq::region, saq::designation_of_origin, saq::producer, saq::color, saq::volume, saq::price, recos::rating))
     .order(saq::price/saq::volume).into_boxed();
-
+    if wine_criteria.color.is_some() {
+        wines_query = wines_query.filter(saq::color.eq(wine_criteria.clone().color.unwrap()));
+    }
     if wine_criteria.min_rating.is_some() {
         wines_query = wines_query.filter(recos::rating.ge(wine_criteria.min_rating.unwrap()));
+    }
+    if wine_criteria.max_price.is_some() {
+        let max_price = BigDecimal::from_str(&wine_criteria.clone().max_price.unwrap());
+        if max_price.is_err() { 
+            return Ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
+        }
+        wines_query = wines_query.filter(saq::price.le(max_price.unwrap()));
     }
     if user.is_some() {
         wines_query = wines_query.filter(recos::user_id.eq(user.unwrap().id));

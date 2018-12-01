@@ -12,7 +12,7 @@ use serde::de::{self, Visitor};
 #[postgres(type_name = "wine_color")]
 pub struct WineColor;
 
-#[derive(Debug, PartialEq, FromSqlRow, AsExpression)]
+#[derive(Debug, PartialEq, FromSqlRow, AsExpression, Clone)]
 #[sql_type = "WineColor"]
 pub enum WineColorEnum {
     Red,
@@ -40,7 +40,6 @@ impl<'de> Visitor<'de> for WineColorVisitor {
             _ => Err(de::Error::custom(format!("invalid wine color: {}", value)))
         }
     }
-
 }
 
 impl<'de> Deserialize<'de> for WineColorEnum {
