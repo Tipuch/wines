@@ -43,7 +43,8 @@ pub struct LoginForm {
 pub struct WineCriteria {
     min_rating: Option<i32>,
     max_price: Option<String>,
-    color: Option<WineColorEnum>
+    color: Option<WineColorEnum>,
+    available_online: Option<bool>
 }
 
 fn save_records(
@@ -239,6 +240,9 @@ pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error:
             return Ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
         }
         wines_query = wines_query.filter(saq::price.le(max_price.unwrap()));
+    }
+    if wine_criteria.available_online.is_some() {
+        wines_query = wines_query.filter(saq::available_online.eq(wine_criteria.available_online.unwrap()));
     }
     if user.is_some() {
         wines_query = wines_query.filter(recos::user_id.eq(user.unwrap().id));

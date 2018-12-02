@@ -2,6 +2,9 @@ use reqwest;
 use reqwest::Result as ReqwestResult;
 use establish_connection;
 use models::{create_saq_wine, parse_wine_color};
+use diesel;
+use diesel::RunQueryDsl;
+use schema::saq_wines;
 use std::str::FromStr;
 use bigdecimal::BigDecimal;
 use select::document::Document;
@@ -18,6 +21,11 @@ fn get_document(url: &String) -> ReqwestResult<String> {
 }
 
 pub fn crawl_saq(origin_url: &String) {
+    let connection = establish_connection();
+    // delete all previous saq_wines present
+    diesel::delete(saq_wines::table)
+        .execute(&connection)
+        .expect("Error deleting saq_wines");
     let mut document = Document::from(&*get_document(origin_url).unwrap());
     let mut next_page = get_next_page(&document);
     while next_page.is_some() {
