@@ -3,7 +3,6 @@ use diesel;
 use diesel::query_dsl::RunQueryDsl;
 use diesel::prelude::PgConnection;
 use std::error::Error;
-use dotenv::dotenv;
 use std::env;
 use schema::{saq_wines, wine_recommendations, users};
 use argon2rs::{defaults, Argon2, Variant, argon2i_simple};
@@ -140,7 +139,6 @@ pub fn hash_password(password: &String, salt: Vec<u8>) -> Vec<u8> {
 }
 
 pub fn compute_salt(email: &String) -> Vec<u8> {
-    dotenv().ok();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
     argon2i_simple(email, &secret_key).to_vec()
 }
