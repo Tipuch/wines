@@ -2,7 +2,6 @@
 extern crate actix_web;
 extern crate select;
 extern crate reqwest;
-extern crate dotenv;
 extern crate futures;
 extern crate csv;
 extern crate serde;
@@ -26,18 +25,15 @@ use actix_web::{
 use controllers::*;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use dotenv::dotenv;
 use std::env;
 use chrono::Duration;
 
 pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     PgConnection::establish(&database_url).expect(&format!("Error connection to {}", database_url))
 }
 
 fn main() {
-    dotenv().ok();
     let domain: String = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 

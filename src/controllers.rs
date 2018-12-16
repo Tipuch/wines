@@ -20,7 +20,6 @@ use bigdecimal::BigDecimal;
 use errors::{LoginError};
 use establish_connection;
 use crawler::crawl_saq;
-use dotenv::dotenv;
 use std::{thread, env};
 use std::str::FromStr;
 use futures::future;
@@ -145,7 +144,6 @@ pub fn index(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
 
 pub fn register(req: HttpRequest) -> FutureResponse<HttpResponse> {
     let headers = req.headers();
-    dotenv().ok();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
     if !headers.contains_key(AUTHORIZATION) || headers[AUTHORIZATION] != secret_key {
         return Box::new(future::ok(HttpResponse::new(http::StatusCode::FORBIDDEN)));
