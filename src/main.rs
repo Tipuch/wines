@@ -38,7 +38,8 @@ pub fn establish_connection() -> PgConnection {
 fn main() {
     let domain: String = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
-    let app = App::new()
+    let serv = server::new(move || {
+        App::new()
         .middleware(middleware::Logger::default())
         .middleware(IdentityService::new(
             CookieIdentityPolicy::new(secret_key.as_bytes())
@@ -62,18 +63,17 @@ fn main() {
         }).resource("/wines/", |r| {
             r.method(http::Method::GET).with(get_wine_recommendations);
         });
+    });
 
     if domain == "localhost" {
-        server::new(move || app)
-            .bind("127.0.0.1:8080")
+        serv.bind("127.0.0.1:8080")
             .unwrap()
             .run();
     } else {
         let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
         builder.set_private_key_file("/etc/nginx/winecollections.ca.key", SslFiletype::PEM).unwrap();
         builder.set_certificate_chain_file("/etc/nginx/winecollections.ca.pem").unwrap();
-        server::new(move || app)
-            .bind_ssl("127.0.0.1:8080", builder)
+        serv.bind_ssl("127.0.0.1:8080", builder)
             .unwrap()
             .start();
     }
