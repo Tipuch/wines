@@ -1,5 +1,6 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 extern crate actix_web;
+extern crate actix;
 extern crate select;
 extern crate reqwest;
 extern crate futures;
@@ -21,7 +22,7 @@ mod controllers;
 mod types;
 use actix_web::middleware::identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{
-    server, http, middleware, server, App
+    server, http, middleware, App
 };
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use controllers::*;
@@ -37,7 +38,10 @@ pub fn establish_connection() -> PgConnection {
 
 fn main() {
     let domain: String = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
+    let bind_address = "127.0.0.1:8080";
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
+    let sys = actix::System::new("wines");
+    let is_localhost = domain == "localhost";
     let serv = server::new(move || {
         App::new()
         .middleware(middleware::Logger::default())
@@ -62,20 +66,19 @@ fn main() {
             r.method(http::Method::POST).with(logout);
         }).resource("/wines/", |r| {
             r.method(http::Method::GET).with(get_wine_recommendations);
-        });
+        })
     });
 
-    if domain == "localhost" {
-        serv.bind("127.0.0.1:8080")
-            .unwrap()
-            .run();
+    if is_localhost {
+        serv.bind(bind_address).unwrap()
+            .start();
     } else {
         let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
         builder.set_private_key_file("/etc/nginx/winecollections.ca.key", SslFiletype::PEM).unwrap();
         builder.set_certificate_chain_file("/etc/nginx/winecollections.ca.pem").unwrap();
-        serv.bind_ssl("127.0.0.1:8080", builder)
-            .unwrap()
+        serv.bind_ssl(bind_address, builder).unwrap()
             .start();
     }
-   
+    println!("Started http server: {}", bind_address);
+    let _ = sys.run();
 }
