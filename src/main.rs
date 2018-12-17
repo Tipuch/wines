@@ -23,7 +23,7 @@ use actix_web::middleware::identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{
     server, HttpServer, middleware, server, App
 };
-use openssl::ssl::{SslMethod, SslAcceptor, SslFiletype};
+use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use controllers::*;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
