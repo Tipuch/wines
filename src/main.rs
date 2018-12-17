@@ -21,7 +21,7 @@ mod controllers;
 mod types;
 use actix_web::middleware::identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{
-    server, HttpServer, middleware, server, App
+    server, http, HttpServer, middleware, server, App
 };
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use controllers::*;
