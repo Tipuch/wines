@@ -21,7 +21,7 @@ mod controllers;
 mod types;
 use actix_web::middleware::identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{
-    server, http, HttpServer, middleware, server, App
+    server, http, middleware, server, App
 };
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use controllers::*;
@@ -72,7 +72,7 @@ fn main() {
         let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
         builder.set_private_key_file("/etc/nginx/winecollections.ca.key", SslFiletype::PEM).unwrap();
         builder.set_certificate_chain_file("/etc/nginx/winecollections.ca.pem").unwrap();
-        HttpServer::new(move || app)
+        server::new(move || app)
             .bind_ssl("127.0.0.1:8080", builder)
             .unwrap()
             .start();
