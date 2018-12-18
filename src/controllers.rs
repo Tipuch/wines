@@ -124,7 +124,7 @@ pub fn crawl_saq_controller(_req: HttpRequest) -> Result<HttpResponse, error::Er
     let headers = req.headers();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
     if !headers.contains_key(AUTHORIZATION) || headers[AUTHORIZATION] != secret_key {
-        return Box::new(future::ok(HttpResponse::new(http::StatusCode::FORBIDDEN)));
+        return Ok(HttpResponse::new(http::StatusCode::FORBIDDEN));
     }
     thread::spawn(move || {
         let origin_url = String::from("https://www.saq.com/webapp/wcs/stores/servlet/SearchDisplay?pageSize=20&searchTerm=*&catalogId=50000&orderBy=1&facet=adi_f9%3A%221%22%7Cadi_f9%3A%221%22&categoryIdentifier=06&beginIndex=0&langId=-1&showOnly=product&categoryId=39919&storeId=20002&metaData=");
