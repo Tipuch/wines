@@ -59,7 +59,7 @@ fn save_records(
             })
             .and_then(|result| {
                 let mut rdr = ReaderBuilder::new()
-                    .delimiter(b';')
+                    .delimiter(b',')
                     .from_reader(&result[..]);
                 let wine_recommendations: Vec<NewWineRecommendation> = rdr.deserialize().map(|r|{
                     r.unwrap()
