@@ -120,7 +120,7 @@ pub fn upload(req: HttpRequest) -> FutureResponse<HttpResponse> {
     )
 }
 
-pub fn crawl_saq_controller(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
+pub fn crawl_saq_controller(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     let headers = req.headers();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
     if !headers.contains_key(AUTHORIZATION) || headers[AUTHORIZATION] != secret_key {
