@@ -101,6 +101,13 @@ pub fn create_wine_recommendations<'a>(conn: &PgConnection, new_wine_recommendat
     diesel::insert_into(wine_recommendations::table)
         .values(new_wine_recommendations)
         .get_results(conn)
+        .expect("Error saving new wine recommendations.")
+}
+
+pub fn create_wine_recommendation<'a>(conn: &PgConnection, new_wine_recommendation: &'a NewWineRecommendation) -> WineRecommendation {
+    diesel::insert_into(wine_recommendations::table)
+        .values(new_wine_recommendation)
+        .get_result(conn)
         .expect("Error saving new wine recommendation.")
 }
 

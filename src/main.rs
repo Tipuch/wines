@@ -66,6 +66,8 @@ fn main() {
             r.method(http::Method::POST).with(logout);
         }).resource("/wines/", |r| {
             r.method(http::Method::GET).with(get_wine_recommendations);
+        }).resource("/winerecommendations/", |r| {
+            r.method(http::Method::POST).with(create_wine_reco);
         })
     });
 

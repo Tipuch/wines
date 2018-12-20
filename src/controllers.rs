@@ -12,6 +12,7 @@ use diesel::{
 use diesel::pg::expression::dsl::any;
 use models::{
     NewWineRecommendation, create_wine_recommendations,
+    create_wine_recommendation,
     compute_salt, hash_password, create_user, User
 };
 use schema::{users, wine_recommendations as recos, saq_wines as saq};
@@ -201,6 +202,29 @@ pub fn login(req: HttpRequest) -> FutureResponse<HttpResponse> {
 pub fn logout(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     req.forget();
     Ok(HttpResponse::Ok().finish())
+}
+
+pub fn create_wine_reco(req: HttpRequest) -> FutureResponse<HttpResponse> {
+    use schema::users::dsl::*;
+
+    Box::new(Json::<NewWineRecommendation>::extract(&req).then(move |wine_reco_result| {
+        let identity = req.identity();
+        let conn = establish_connection();
+        if identity.is_some() {
+            let user = Some(users
+                .filter(email.eq(identity.unwrap()))
+                .first::<User>(&conn).unwrap());
+            if wine_reco_result.is_err() {
+                return future::ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
+            }
+            let mut new_wine_recommendation = wine_reco_result.unwrap();
+            new_wine_recommendation.user_id = Some(user.unwrap().id);
+            create_wine_recommendation(&conn, &new_wine_recommendation);
+            return future::ok(HttpResponse::new(http::StatusCode::CREATED));
+        } else {
+            return future::ok(HttpResponse::new(http::StatusCode::UNAUTHORIZED));
+        }
+    }))
 }
 
 pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error::Error> {
