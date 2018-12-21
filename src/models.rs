@@ -69,7 +69,7 @@ color: &'a WineColorEnum, grape_varieties: &'a Vec<String>, available_online: &'
         .expect("Error saving new SAQ Wine.")
 }
 
-#[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Serialize, Deserialize)]
 #[belongs_to(User)]
 pub struct WineRecommendation {
     pub id: i32,

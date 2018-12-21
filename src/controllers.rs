@@ -12,7 +12,7 @@ use diesel::{
 use diesel::pg::expression::dsl::any;
 use models::{
     NewWineRecommendation, create_wine_recommendations,
-    create_wine_recommendation,
+    create_wine_recommendation, WineRecommendation,
     compute_salt, hash_password, create_user, User
 };
 use schema::{users, wine_recommendations as recos, saq_wines as saq};
@@ -211,14 +211,14 @@ pub fn create_wine_reco(req: HttpRequest) -> FutureResponse<HttpResponse> {
         let identity = req.identity();
         let conn = establish_connection();
         if identity.is_some() {
-            let user = Some(users
+            let user = users
                 .filter(email.eq(identity.unwrap()))
-                .first::<User>(&conn).unwrap());
+                .first::<User>(&conn).unwrap();
             if wine_reco_result.is_err() {
                 return future::ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
             }
             let mut new_wine_recommendation = wine_reco_result.unwrap();
-            new_wine_recommendation.user_id = Some(user.unwrap().id);
+            new_wine_recommendation.user_id = Some(user.id);
             create_wine_recommendation(&conn, &new_wine_recommendation);
             return future::ok(HttpResponse::new(http::StatusCode::CREATED));
         } else {
@@ -227,7 +227,25 @@ pub fn create_wine_reco(req: HttpRequest) -> FutureResponse<HttpResponse> {
     }))
 }
 
-pub fn get_wine_recommendations(req: HttpRequest) -> Result<HttpResponse, error::Error> {
+pub fn get_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> {
+    use schema::users::dsl::*;
+    let identity = req.identity();
+    let conn = establish_connection();
+    if identity.is_some() {
+        let user = users
+            .filter(email.eq(identity.unwrap()))
+            .first::<User>(&conn).unwrap();
+        let query = recos::table.filter(
+            recos::user_id.eq(user.id)
+        ).load::<WineRecommendation>(&conn)
+        .expect("Error fetching wine recommendations.");
+        return Ok(HttpResponse::Ok().json(query));
+    } else {
+        return Ok(HttpResponse::new(http::StatusCode::UNAUTHORIZED));
+    }
+}
+
+pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     let wine_criteria_result = Query::<WineCriteria>::extract(&req);
     if wine_criteria_result.is_err() {
         return Ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));

@@ -65,9 +65,10 @@ fn main() {
         }).resource("/logout/", |r| {
             r.method(http::Method::POST).with(logout);
         }).resource("/wines/", |r| {
-            r.method(http::Method::GET).with(get_wine_recommendations);
+            r.method(http::Method::GET).with(get_wines);
         }).resource("/winerecommendations/", |r| {
             r.method(http::Method::POST).with(create_wine_reco);
+            r.method(http::Method::GET).with(get_wine_reco);
         })
     });
 
