@@ -69,6 +69,8 @@ fn main() {
         }).resource("/winerecommendations/", |r| {
             r.method(http::Method::POST).with(create_wine_reco);
             r.method(http::Method::GET).with(get_wine_reco);
+        }).resource("/winerecommendations/{wine_recommendation_id}/", |r| {
+            r.method(http::Method::PUT).with(update_wine_reco);
         })
     });
 

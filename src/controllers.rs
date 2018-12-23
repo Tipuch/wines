@@ -39,6 +39,18 @@ pub struct LoginForm {
     password: String
 }
 
+#[derive(Deserialize, AsChangeset)]
+#[table_name="recos"]
+pub struct WineRecommendationForm {
+    pub country: String,
+    pub region: String,
+    pub designation_of_origin: String,
+    pub producer: String,
+    pub rating: i32,
+    pub color: WineColorEnum,
+    pub grape_variety: String,
+}
+
 #[derive(Deserialize, Clone)]
 pub struct WineCriteria {
     min_rating: Option<i32>,
@@ -243,6 +255,37 @@ pub fn get_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     } else {
         return Ok(HttpResponse::new(http::StatusCode::UNAUTHORIZED));
     }
+}
+
+pub fn update_wine_reco(req: HttpRequest) -> FutureResponse<HttpResponse> {
+    use schema::users::dsl::*;
+    use schema::wine_recommendations;
+
+    Box::new(Json::<WineRecommendationForm>::extract(&req).then(move |wine_reco_result| {
+        let identity = req.identity();
+        let conn = establish_connection();
+        let parsed_wine_reco_id = req.match_info().get("wine_recommendation_id").unwrap().parse::<i32>();
+        if parsed_wine_reco_id.is_err() {
+            return future::ok(HttpResponse::new(http::StatusCode::NOT_FOUND));
+        }
+        let wine_recommendation_id = parsed_wine_reco_id.unwrap();
+        if identity.is_some() {
+            let user = users
+                .filter(email.eq(identity.unwrap()))
+                .first::<User>(&conn).unwrap();
+            if wine_reco_result.is_err() {
+                return future::ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
+            }
+            let target = wine_recommendations::table.filter(
+                wine_recommendations::dsl::user_id.eq(user.id).and(
+                    wine_recommendations::dsl::id.eq(wine_recommendation_id)));
+            let wine_recommendation_form: WineRecommendationForm = wine_reco_result.unwrap().into_inner();
+            diesel::update(target).set(&wine_recommendation_form);
+            return future::ok(HttpResponse::new(http::StatusCode::OK));
+        } else {
+            return future::ok(HttpResponse::new(http::StatusCode::UNAUTHORIZED));
+        }
+    }))
 }
 
 pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
