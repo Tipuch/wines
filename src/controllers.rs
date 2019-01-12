@@ -288,6 +288,32 @@ pub fn update_wine_reco(req: HttpRequest) -> FutureResponse<HttpResponse> {
     }))
 }
 
+pub fn delete_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> {
+    use schema::users::dsl::*;
+    use schema::wine_recommendations;
+
+    let identity = req.identity();
+    let conn = establish_connection();
+    let parsed_wine_reco_id = req.match_info().get("wine_recommendation_id").unwrap().parse::<i32>();
+    if parsed_wine_reco_id.is_err() {
+        return Ok(HttpResponse::new(http::StatusCode::NOT_FOUND));
+    }
+    if identity.is_some() {
+        let user = users
+            .filter(email.eq(identity.unwrap()))
+            .first::<User>(&conn).unwrap();
+        let target = wine_recommendations::table.filter(
+            wine_recommendations::dsl::user_id.eq(user.id).and(
+            wine_recommendations::dsl::id.eq(parsed_wine_reco_id.unwrap())));
+        diesel::delete(target)
+            .execute(&conn)
+            .expect("Error deleting wine recommendation");
+        return Ok(HttpResponse::new(http::StatusCode::OK));
+    } else {
+        return Ok(HttpResponse::new(http::StatusCode::UNAUTHORIZED));
+    }
+}
+
 pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     let wine_criteria_result = Query::<WineCriteria>::extract(&req);
     if wine_criteria_result.is_err() {
