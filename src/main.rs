@@ -51,7 +51,7 @@ fn main() {
                 .path("/")
                 .domain(domain.as_str())
                 .max_age(Duration::days(30)) // just for testing
-                .secure(false),
+                .secure(true),
         ))
         .resource("/", |r| {
             r.method(http::Method::GET).with(index);
