@@ -41,6 +41,7 @@ table! {
         color -> WineColor,
         grape_variety -> Varchar,
         user_id -> Nullable<Int4>,
+        wine_name -> Varchar,
     }
 }
 

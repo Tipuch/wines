@@ -1,0 +1,1 @@
+ALTER TABLE wine_recommendations DROP COLUMN wine_name;

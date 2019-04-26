@@ -50,7 +50,7 @@ fn main() {
                 .name("auth")
                 .path("/")
                 .domain(domain.as_str())
-                .max_age(Duration::days(30)) // just for testing
+                .max_age(Duration::days(30))
                 .secure(true),
         ))
         .resource("/", |r| {

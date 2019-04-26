@@ -80,7 +80,8 @@ pub struct WineRecommendation {
     pub rating: i32,
     pub color: WineColorEnum,
     pub grape_variety: String,
-    pub user_id: Option<i32>
+    pub user_id: Option<i32>,
+    pub name: String
 }
 
 #[derive(Insertable, Serialize, Deserialize)]
@@ -93,7 +94,8 @@ pub struct NewWineRecommendation {
     pub rating: i32,
     pub color: WineColorEnum,
     pub grape_variety: String,
-    pub user_id: Option<i32>
+    pub user_id: Option<i32>,
+    pub wine_name: String
 }
 
 pub fn create_wine_recommendations<'a>(conn: &PgConnection, new_wine_recommendations: &'a Vec<NewWineRecommendation>) -> Vec<WineRecommendation> {

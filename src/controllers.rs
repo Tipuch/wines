@@ -331,8 +331,9 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     let mut wines_query = saq::table.inner_join(
         recos::table.on(recos::country.eq("").or(saq::country.ilike(recos::country)).and(
             recos::region.eq("").or(saq::region.ilike(recos::region)).and(
-                recos::designation_of_origin.eq("").or(saq::designation_of_origin.ilike(recos::designation_of_origin.concat("%"))).and(
-                    recos::producer.eq("").or(saq::producer.ilike(recos::producer)).and(
+                recos::designation_of_origin.eq("").or(saq::designation_of_origin.ilike(recos::designation_of_origin.concat("%")))
+                .and(recos::wine_name.eq("").or(saq::name.ilike(recos::wine_name.concat("%"))))
+                .and(recos::producer.eq("").or(saq::producer.ilike(recos::producer)).and(
                         recos::grape_variety.eq("").or(recos::grape_variety.ilike(any(saq::grape_varieties)).and(
                             saq::color.eq(recos::color)
                         )
