@@ -334,14 +334,14 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
                 recos::designation_of_origin.eq("").or(saq::designation_of_origin.ilike(recos::designation_of_origin.concat("%")))
                 .and(recos::wine_name.eq("").or(saq::name.ilike(recos::wine_name.concat("%")))
                 .and(recos::producer.eq("").or(saq::producer.ilike(recos::producer)).and(
-                        recos::grape_variety.eq("").or(recos::grape_variety.ilike(any(saq::grape_varieties)).and(
+                        recos::grape_variety.eq("").or(recos::grape_variety.ilike(any(saq::grape_varieties))).and(
                             saq::color.eq(recos::color)
                         )
                     )
                 )
             )
         )
-    )))).select((saq::name, saq::available_online, saq::country, saq::region, saq::designation_of_origin, saq::producer, saq::color, saq::volume, saq::price, recos::rating))
+    ))).select((saq::name, saq::available_online, saq::country, saq::region, saq::designation_of_origin, saq::producer, saq::color, saq::volume, saq::price, recos::rating))
     .order(saq::price/saq::volume).into_boxed();
     if wine_criteria.color.is_some() {
         wines_query = wines_query.filter(saq::color.eq(wine_criteria.clone().color.unwrap()));
