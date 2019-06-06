@@ -1,10 +1,10 @@
 use csv::ReaderBuilder;
 use actix_web::{
-    dev, error, http, multipart, Error, FutureResponse, ResponseError,
-    HttpMessage, HttpRequest, HttpResponse, Json, FromRequest, Query
+    dev, error, http, Error, ResponseError, HttpRequest, HttpResponse, FromRequest
 };
+use actix_multipart::Multipart;
 use actix_web::http::header::AUTHORIZATION;
-use actix_web::middleware::identity::RequestIdentity;
+use actix_web::middleware::identity::Identity;
 use diesel::{
     ExpressionMethods, PgTextExpressionMethods, BoolExpressionMethods,
     JoinOnDsl, QueryDsl, RunQueryDsl, TextExpressionMethods
@@ -99,14 +99,14 @@ fn handle_multipart_item(
     }
 }
 
-pub fn upload(req: HttpRequest) -> FutureResponse<HttpResponse> {
+pub fn upload(req: HttpRequest) -> Box<Future<Item=HttpResponse, Error=Error>> {
     use schema::users::dsl::*;
-    let identity = req.identity();
+    let identity = Identity::extract(&req).unwrap();
     let mut user = None;
     let conn = establish_connection();
-    if identity.is_some() {
+    if identity.identity().is_some() {
         user = Some(users
-            .filter(email.eq(identity.unwrap()))
+            .filter(email.eq(identity.identity().unwrap()))
             .first::<User>(&conn).unwrap());
     }
     
@@ -136,7 +136,7 @@ pub fn upload(req: HttpRequest) -> FutureResponse<HttpResponse> {
 pub fn crawl_saq_controller(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     let headers = req.headers();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
-    if !headers.contains_key(AUTHORIZATION) || headers[AUTHORIZATION] != secret_key {
+    if !headers.contains_key(AUTHORIZATION) || headers.get(AUTHORIZATION).unwrap().to_str().unwrap() != secret_key {
         return Ok(HttpResponse::new(http::StatusCode::FORBIDDEN));
     }
     thread::spawn(move || {
@@ -160,10 +160,10 @@ pub fn index(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
     Ok(HttpResponse::Ok().body(html))
 }
 
-pub fn register(req: HttpRequest) -> FutureResponse<HttpResponse> {
+pub fn register(req: HttpRequest) -> Box<Future<Item=HttpResponse, Error=Error>> {
     let headers = req.headers();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
-    if !headers.contains_key(AUTHORIZATION) || headers[AUTHORIZATION] != secret_key {
+    if !headers.contains_key(AUTHORIZATION) || headers.get(AUTHORIZATION).unwrap().to_str().unwrap() != secret_key {
         return Box::new(future::ok(HttpResponse::new(http::StatusCode::FORBIDDEN)));
     }
     Box::new(Json::<UserForm>::extract(&req).then(|user_form_result| {
@@ -187,7 +187,7 @@ pub fn register(req: HttpRequest) -> FutureResponse<HttpResponse> {
     }))
 }
 
-pub fn login(req: HttpRequest) -> FutureResponse<HttpResponse> {
+pub fn login(req: HttpRequest) -> Box<Future<Item=HttpResponse, Error=Error>> {
     use schema::users::dsl::*;
     Box::new(Json::<LoginForm>::extract(&req).then(move |login_form_result| {
         if login_form_result.is_err() {
@@ -203,28 +203,29 @@ pub fn login(req: HttpRequest) -> FutureResponse<HttpResponse> {
         }
         let user = user_result.unwrap();
         if hash_password(&login_form.password, user.salt) == user.password {
+            let identity = Identity::extract(&req).unwrap();
             // congrats you're in :)
-            req.remember(user.email);
+            identity.remember(user.email);
             return future::ok(HttpResponse::Ok().finish());
         }
         future::ok(LoginError::ValidationError.error_response())
     }))
 }
 
-pub fn logout(req: HttpRequest) -> Result<HttpResponse, error::Error> {
-    req.forget();
+pub fn logout(identity: Identity) -> Result<HttpResponse, error::Error> {
+    identity.forget();
     Ok(HttpResponse::Ok().finish())
 }
 
-pub fn create_wine_reco(req: HttpRequest) -> FutureResponse<HttpResponse> {
+pub fn create_wine_reco(req: HttpRequest) -> Box<Future<Item=HttpResponse, Error=Error>> {
     use schema::users::dsl::*;
 
     Box::new(Json::<NewWineRecommendation>::extract(&req).then(move |wine_reco_result| {
-        let identity = req.identity();
+        let identity = Identity::extract(&req).unwrap();
         let conn = establish_connection();
-        if identity.is_some() {
+        if identity.identity().is_some() {
             let user = users
-                .filter(email.eq(identity.unwrap()))
+                .filter(email.eq(identity.identity().unwrap()))
                 .first::<User>(&conn).unwrap();
             if wine_reco_result.is_err() {
                 return future::ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
@@ -241,11 +242,11 @@ pub fn create_wine_reco(req: HttpRequest) -> FutureResponse<HttpResponse> {
 
 pub fn get_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     use schema::users::dsl::*;
-    let identity = req.identity();
+    let identity = Identity::extract(&req).unwrap();
     let conn = establish_connection();
-    if identity.is_some() {
+    if identity.identity().is_some() {
         let user = users
-            .filter(email.eq(identity.unwrap()))
+            .filter(email.eq(identity.identity().unwrap()))
             .first::<User>(&conn).unwrap();
         let query = recos::table.filter(
             recos::user_id.eq(user.id)
@@ -257,21 +258,21 @@ pub fn get_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     }
 }
 
-pub fn update_wine_reco(req: HttpRequest) -> FutureResponse<HttpResponse> {
+pub fn update_wine_reco(req: HttpRequest) -> Box<Future<Item=HttpResponse, Error=Error>> {
     use schema::users::dsl::*;
     use schema::wine_recommendations;
 
     Box::new(Json::<WineRecommendationForm>::extract(&req).then(move |wine_reco_result| {
-        let identity = req.identity();
+        let identity = Identity::extract(&req).unwrap();
         let conn = establish_connection();
         let parsed_wine_reco_id = req.match_info().get("wine_recommendation_id").unwrap().parse::<i32>();
         if parsed_wine_reco_id.is_err() {
             return future::ok(HttpResponse::new(http::StatusCode::NOT_FOUND));
         }
         let wine_recommendation_id = parsed_wine_reco_id.unwrap();
-        if identity.is_some() {
+        if identity.identity().is_some() {
             let user = users
-                .filter(email.eq(identity.unwrap()))
+                .filter(email.eq(identity.identity().unwrap()))
                 .first::<User>(&conn).unwrap();
             if wine_reco_result.is_err() {
                 return future::ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
@@ -292,15 +293,15 @@ pub fn delete_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> 
     use schema::users::dsl::*;
     use schema::wine_recommendations;
 
-    let identity = req.identity();
+    let identity = Identity::extract(&req).unwrap();
     let conn = establish_connection();
     let parsed_wine_reco_id = req.match_info().get("wine_recommendation_id").unwrap().parse::<i32>();
     if parsed_wine_reco_id.is_err() {
         return Ok(HttpResponse::new(http::StatusCode::NOT_FOUND));
     }
-    if identity.is_some() {
+    if identity.identity().is_some() {
         let user = users
-            .filter(email.eq(identity.unwrap()))
+            .filter(email.eq(identity.identity().unwrap()))
             .first::<User>(&conn).unwrap();
         let target = wine_recommendations::table.filter(
             wine_recommendations::dsl::user_id.eq(user.id).and(
@@ -320,12 +321,12 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
         return Ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
     }
     let wine_criteria = wine_criteria_result.unwrap();
-    let identity = req.identity();
+    let identity = Identity::extract(&req).unwrap();
     let mut user = None;
     let conn = establish_connection();
-    if identity.is_some() {
+    if identity.identity().is_some() {
         user = Some(users::table
-            .filter(users::email.eq(identity.unwrap()))
+            .filter(users::email.eq(identity.identity().unwrap()))
             .first::<User>(&conn).unwrap());
     }
     let mut wines_query = saq::table.inner_join(

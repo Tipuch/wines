@@ -1,6 +1,7 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 extern crate actix_web;
-extern crate actix;
+extern crate actix_rt;
+extern crate actix_multipart;
 extern crate select;
 extern crate reqwest;
 extern crate futures;
@@ -12,7 +13,6 @@ extern crate argon2rs;
 #[macro_use] extern crate serde_json;
 #[macro_use] extern crate diesel;
 extern crate bigdecimal;
-extern crate chrono;
 extern crate openssl;
 mod errors;
 mod schema;
@@ -22,14 +22,14 @@ mod controllers;
 mod types;
 use actix_web::middleware::identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{
-    server, http, middleware, App
+    middleware, App, HttpServer
 };
+use actix_web::*;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use controllers::*;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use std::env;
-use chrono::Duration;
 
 pub fn establish_connection() -> PgConnection {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -40,39 +40,38 @@ fn main() {
     let domain: String = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
     let bind_address = "127.0.0.1:8080";
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
-    let sys = actix::System::new("wines");
+    let sys = actix_rt::System::new("wines");
     let is_localhost = domain == "localhost";
-    let serv = server::new(move || {
+    let serv = HttpServer::new(move || {
         App::new()
-        .middleware(middleware::Logger::default())
-        .middleware(IdentityService::new(
+        .wrap(middleware::Logger::default())
+        .wrap(IdentityService::new(
             CookieIdentityPolicy::new(secret_key.as_bytes())
                 .name("auth")
                 .path("/")
                 .domain(domain.as_str())
-                .max_age(Duration::days(30))
+                .max_age(2592000)
                 .secure(true),
         ))
-        .resource("/", |r| {
-            r.method(http::Method::GET).with(index);
-            r.method(http::Method::POST).with(upload);
-        }).resource("/crawl/", |r| {
-            r.method(http::Method::POST).with(crawl_saq_controller);
-        }).resource("/users/", |r| {
-            r.method(http::Method::POST).with(register);
-        }).resource("/login/", |r| {
-            r.method(http::Method::POST).with(login);
-        }).resource("/logout/", |r| {
-            r.method(http::Method::POST).with(logout);
-        }).resource("/wines/", |r| {
-            r.method(http::Method::GET).with(get_wines);
-        }).resource("/winerecommendations/", |r| {
-            r.method(http::Method::POST).with(create_wine_reco);
-            r.method(http::Method::GET).with(get_wine_reco);
-        }).resource("/winerecommendations/{wine_recommendation_id}/", |r| {
-            r.method(http::Method::PUT).with(update_wine_reco);
-            r.method(http::Method::DELETE).with(delete_wine_reco);
-        })
+        .service(web::resource("/")
+            .route(web::get().to(index))
+            .route(web::post().to(upload)))
+        .service(web::resource("/crawl/")
+            .route(web::post().to(crawl_saq_controller)))
+        .service(web::resource("/users/")
+            .route(web::post().to(register)))
+        .service(web::resource("/login/")
+            .route(web::post().to(login)))
+        .service(web::resource("/logout/")
+            .route(web::post().to(logout)))
+        .service(web::resource("/wines/")
+            .route(web::get().to(get_wines)))
+        .service(web::resource("/winerecommendations/")
+            .route(web::post().to(create_wine_reco))
+            .route(web::get().to(get_wine_reco)))
+        .service(web::resource("/winerecommendations/{wine_recommendation_id}/")
+            .route(web::put().to(update_wine_reco))
+            .route(web::delete().to(delete_wine_reco)))
     });
 
     if is_localhost {
