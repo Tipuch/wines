@@ -470,3 +470,7 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
 
     Ok(HttpResponse::Ok().json(json!({ "results": results })))
 }
+
+pub fn get_health(req: HttpRequest) -> Result<HttpResponse, error::Error> {
+    Ok(HttpResponse::Ok().finish())
+}

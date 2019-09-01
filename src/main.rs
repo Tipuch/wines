@@ -56,6 +56,8 @@ fn main() {
         .service(web::resource("/")
             .route(web::get().to(index))
             .route(web::post().to(upload)))
+        .service(web::resource("/health/")
+            .route(web::get().to(get_health)))
         .service(web::resource("/crawl/")
             .route(web::post().to(crawl_saq_controller)))
         .service(web::resource("/users/")
