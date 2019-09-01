@@ -113,7 +113,7 @@ pub fn create_wine_recommendation<'a>(conn: &PgConnection, new_wine_recommendati
         .expect("Error saving new wine recommendation.")
 }
 
-pub fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<Error>> {
+pub fn parse_wine_color(string: &str) -> Result<WineColorEnum, Box<dyn Error>> {
     match string {
         "red" => Ok(WineColorEnum::Red),
         "white" => Ok(WineColorEnum::White),

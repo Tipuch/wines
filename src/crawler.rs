@@ -119,7 +119,7 @@ fn crawl_saq_wine(detail_page_url: &str) {
 }
 
 fn parse_wine_info(document: &Document, info_selector: &str,
-    handling_func: Box<(Fn(&Node) -> Option<String>)>) -> Option<String> {
+    handling_func: Box<dyn (Fn(&Node) -> Option<String>)>) -> Option<String> {
     for node in document.find(Attr("id", "details").descendant(Name("li"))) {
         let left = node.find(Class("left").descendant(Name("span"))).next();
         let right = node.find(Class("right")).next();

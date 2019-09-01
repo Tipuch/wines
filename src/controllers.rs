@@ -60,12 +60,12 @@ pub struct WineCriteria {
 
 fn save_records(
     field: Field,
-) -> Box<Stream<Item = Vec<NewWineRecommendation>, Error = error::Error>> {
+) -> Box<dyn Stream<Item = Vec<NewWineRecommendation>, Error = error::Error>> {
     Box::new(
         field
             .fold(
                 vec![],
-                |mut acc, bytes| -> Box<Future<Item = Vec<u8>, Error = MultipartError>> {
+                |mut acc, bytes| -> Box<dyn Future<Item = Vec<u8>, Error = MultipartError>> {
                     for byte in bytes {
                         acc.push(byte);
                     }
@@ -85,7 +85,7 @@ fn save_records(
     )
 }
 
-pub fn upload(req: HttpRequest) -> Box<Future<Item = HttpResponse, Error = Error>> {
+pub fn upload(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
     use schema::users::dsl::*;
     let identity = Identity::extract(&req).unwrap();
     let mut user = None;
@@ -151,7 +151,7 @@ pub fn index(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
     Ok(HttpResponse::Ok().body(html))
 }
 
-pub fn register(req: HttpRequest) -> Box<Future<Item = HttpResponse, Error = Error>> {
+pub fn register(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
     let headers = req.headers();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
     if !headers.contains_key(AUTHORIZATION)
@@ -183,7 +183,7 @@ pub fn register(req: HttpRequest) -> Box<Future<Item = HttpResponse, Error = Err
     )
 }
 
-pub fn login(req: HttpRequest) -> Box<Future<Item = HttpResponse, Error = Error>> {
+pub fn login(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
     use schema::users::dsl::*;
     Box::new(
         web::Json::<LoginForm>::extract(&req).then(move |login_form_result| {
@@ -215,7 +215,7 @@ pub fn logout(identity: Identity) -> Result<HttpResponse, error::Error> {
     Ok(HttpResponse::Ok().finish())
 }
 
-pub fn create_wine_reco(req: HttpRequest) -> Box<Future<Item = HttpResponse, Error = Error>> {
+pub fn create_wine_reco(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
     use schema::users::dsl::*;
 
     Box::new(
@@ -260,7 +260,7 @@ pub fn get_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     }
 }
 
-pub fn update_wine_reco(req: HttpRequest) -> Box<Future<Item = HttpResponse, Error = Error>> {
+pub fn update_wine_reco(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
     use schema::users::dsl::*;
     use schema::wine_recommendations;
 
@@ -471,6 +471,6 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     Ok(HttpResponse::Ok().json(json!({ "results": results })))
 }
 
-pub fn get_health(req: HttpRequest) -> Result<HttpResponse, error::Error> {
+pub fn get_health(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
     Ok(HttpResponse::Ok().finish())
 }
