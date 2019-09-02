@@ -10,10 +10,11 @@ use serde::de::{self, Visitor};
 
 #[derive(SqlType)]
 #[postgres(type_name = "wine_color")]
-pub struct WineColor;
+#[allow(non_camel_case_types)]
+pub struct Wine_color;
 
 #[derive(Debug, PartialEq, FromSqlRow, AsExpression, Clone)]
-#[sql_type = "WineColor"]
+#[sql_type = "Wine_color"]
 pub enum WineColorEnum {
     Red,
     White,
@@ -64,7 +65,7 @@ impl Serialize for WineColorEnum {
     }
 }
 
-impl ToSql<WineColor, Pg> for WineColorEnum {
+impl ToSql<Wine_color, Pg> for WineColorEnum {
     fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
         match *self {
             WineColorEnum::Red => out.write_all(b"red")?,
@@ -75,7 +76,7 @@ impl ToSql<WineColor, Pg> for WineColorEnum {
     }
 }
 
-impl FromSql<WineColor, Pg> for WineColorEnum {
+impl FromSql<Wine_color, Pg> for WineColorEnum {
     fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
         match not_none!(bytes) {
             b"red" => Ok(WineColorEnum::Red),

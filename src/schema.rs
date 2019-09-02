@@ -1,5 +1,5 @@
 table! {
-    use types::WineColor;
+    use types::Wine_color;
     use diesel::sql_types::*;
     saq_wines (id) {
         id -> Int4,
@@ -12,7 +12,7 @@ table! {
         volume -> Numeric,
         price -> Numeric,
         alcohol_percent -> Numeric,
-        color -> WineColor,
+        color -> Wine_color,
         grape_varieties -> Array<Text>,
         available_online -> Bool,
     }
@@ -29,7 +29,7 @@ table! {
 }
 
 table! {
-    use types::WineColor;
+    use types::Wine_color;
     use diesel::sql_types::*;
     wine_recommendations (id) {
         id -> Int4,
@@ -38,7 +38,7 @@ table! {
         designation_of_origin -> Varchar,
         producer -> Varchar,
         rating -> Int4,
-        color -> WineColor,
+        color -> Wine_color,
         grape_variety -> Varchar,
         user_id -> Nullable<Int4>,
         wine_name -> Varchar,
