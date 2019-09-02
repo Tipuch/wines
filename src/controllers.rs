@@ -1,7 +1,7 @@
 
 use actix_multipart::{Field, Multipart, MultipartError};
 use actix_web::http::header::AUTHORIZATION;
-use actix_web::middleware::identity::Identity;
+use actix_identity::Identity;
 use actix_web::{error, http, web, Error, FromRequest, HttpRequest, HttpResponse, ResponseError};
 use bigdecimal::BigDecimal;
 use crawler::crawl_saq;

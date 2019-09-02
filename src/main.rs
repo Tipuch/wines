@@ -1,6 +1,7 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 extern crate actix_web;
 extern crate actix_rt;
+extern crate actix_identity;
 extern crate actix_multipart;
 extern crate select;
 extern crate reqwest;
@@ -20,7 +21,7 @@ mod models;
 mod crawler;
 mod controllers;
 mod types;
-use actix_web::middleware::identity::{CookieIdentityPolicy, IdentityService};
+use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{
     middleware, App, HttpServer
 };
