@@ -3,3 +3,4 @@
 
 [print_schema]
 file = "src/schema.rs"
+import_type = ["diesel::sql_types::*", "types::WineColor"]
