@@ -1,6 +1,7 @@
 use actix_files::NamedFile;
-use actix_web::http::header::AUTHORIZATION;
 use actix_identity::Identity;
+use actix_web::http::header::ContentType;
+use actix_web::http::header::AUTHORIZATION;
 use actix_web::{error, http, web, Error, FromRequest, HttpRequest, HttpResponse, ResponseError};
 use bigdecimal::BigDecimal;
 use crawler::crawl_saq;
@@ -12,10 +13,10 @@ use diesel::{
 };
 use errors::LoginError;
 use establish_connection;
-use futures::{Future, future};
+use futures::{future, Future};
 use models::{
-    compute_salt, create_user, create_wine_recommendation,
-    hash_password, NewWineRecommendation, User, WineRecommendation,
+    compute_salt, create_user, create_wine_recommendation, hash_password, NewWineRecommendation,
+    User, WineRecommendation,
 };
 use schema::{saq_wines as saq, users, wine_recommendations as recos};
 use std::io::Read;
@@ -72,8 +73,10 @@ pub fn crawl_saq_controller(req: HttpRequest) -> Result<HttpResponse, error::Err
 
 pub fn index(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
     let mut buffer = Vec::new();
-    NamedFile::open("static/html/index.html")?.file().read_to_end(&mut buffer)?;
-    Ok(HttpResponse::Ok().body(buffer))
+    NamedFile::open("./static/html/index.html")?
+        .file()
+        .read_to_end(&mut buffer)?;
+    Ok(HttpResponse::Ok().set(ContentType::html()).body(buffer))
 }
 
 pub fn register(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
