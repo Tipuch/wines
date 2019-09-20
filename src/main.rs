@@ -2,7 +2,7 @@
 extern crate actix_web;
 extern crate actix_rt;
 extern crate actix_identity;
-extern crate actix_multipart;
+extern crate actix_files;
 extern crate select;
 extern crate reqwest;
 extern crate futures;
@@ -55,8 +55,7 @@ fn main() {
                 .secure(true),
         ))
         .service(web::resource("/")
-            .route(web::get().to(index))
-            .route(web::post().to(upload)))
+            .route(web::get().to(index)))
         .service(web::resource("/health/")
             .route(web::get().to(get_health)))
         .service(web::resource("/crawl/")

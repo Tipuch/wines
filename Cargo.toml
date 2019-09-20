@@ -12,7 +12,7 @@ serde_derive = "1.0.90"
 serde_json = "1.0.39"
 openssl = { version = "0.10.20", features = ["v110"] }
 actix-rt = "0.2"
-actix-multipart = "0.1"
+actix-files = "0.1.4"
 actix-identity = "0.1"
 actix-web = { version = "1", features = ["ssl"] }
 diesel = { version = "1.4.2", features = ["postgres", "numeric"] }

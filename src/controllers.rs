@@ -1,11 +1,9 @@
-
-use actix_multipart::{Field, Multipart, MultipartError};
+use actix_files::NamedFile;
 use actix_web::http::header::AUTHORIZATION;
 use actix_identity::Identity;
 use actix_web::{error, http, web, Error, FromRequest, HttpRequest, HttpResponse, ResponseError};
 use bigdecimal::BigDecimal;
 use crawler::crawl_saq;
-use csv::ReaderBuilder;
 use diesel::pg::expression::dsl::any;
 use diesel::OptionalExtension;
 use diesel::{
@@ -14,14 +12,13 @@ use diesel::{
 };
 use errors::LoginError;
 use establish_connection;
-
-use futures::future;
-use futures::{Future, Stream};
+use futures::{Future, future};
 use models::{
-    compute_salt, create_user, create_wine_recommendation, create_wine_recommendations,
+    compute_salt, create_user, create_wine_recommendation,
     hash_password, NewWineRecommendation, User, WineRecommendation,
 };
 use schema::{saq_wines as saq, users, wine_recommendations as recos};
+use std::io::Read;
 use std::str::FromStr;
 use std::{env, thread};
 use types::WineColorEnum;
@@ -58,70 +55,6 @@ pub struct WineCriteria {
     available_online: Option<bool>,
 }
 
-fn save_records(
-    field: Field,
-) -> Box<dyn Stream<Item = Vec<NewWineRecommendation>, Error = error::Error>> {
-    Box::new(
-        field
-            .fold(
-                vec![],
-                |mut acc, bytes| -> Box<dyn Future<Item = Vec<u8>, Error = MultipartError>> {
-                    for byte in bytes {
-                        acc.push(byte);
-                    }
-                    Box::new(future::ok(acc))
-                },
-            )
-            .and_then(|result| {
-                let mut rdr = ReaderBuilder::new()
-                    .delimiter(b',')
-                    .from_reader(&result[..]);
-                let wine_recommendations: Vec<NewWineRecommendation> =
-                    rdr.deserialize().map(|r| r.unwrap()).collect();
-                future::ok(wine_recommendations)
-            })
-            .map_err(|_| error::ErrorInternalServerError("This didn't work"))
-            .into_stream(),
-    )
-}
-
-pub fn upload(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
-    use schema::users::dsl::*;
-    let identity = Identity::extract(&req).unwrap();
-    let mut user = None;
-    let conn = establish_connection();
-    if identity.identity().is_some() {
-        user = Some(
-            users
-                .filter(email.eq(identity.identity().unwrap()))
-                .first::<User>(&conn)
-                .unwrap(),
-        );
-    }
-    let multipart = Multipart::extract(&req).unwrap();
-    Box::new(
-        multipart
-            .map_err(error::ErrorInternalServerError)
-            .map(save_records)
-            .flatten()
-            .map(move |mut wine_recommendations| {
-                if user.is_some() {
-                    for wine_reco in wine_recommendations.iter_mut() {
-                        wine_reco.user_id = Some(user.clone().unwrap().id);
-                    }
-                }
-                create_wine_recommendations(&conn, &wine_recommendations);
-                wine_recommendations
-            })
-            .collect()
-            .map(|wine_recommendations| HttpResponse::Ok().json(wine_recommendations))
-            .map_err(|e| {
-                println!("failed: {}", e);
-                e
-            }),
-    )
-}
-
 pub fn crawl_saq_controller(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     let headers = req.headers();
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
@@ -138,17 +71,9 @@ pub fn crawl_saq_controller(req: HttpRequest) -> Result<HttpResponse, error::Err
 }
 
 pub fn index(_req: HttpRequest) -> Result<HttpResponse, error::Error> {
-    let html = r#"<html>
-        <head><title>Upload Test</title></head>
-        <body>
-            <form target="/" method="post" enctype="multipart/form-data">
-                <input type="file" name="file"/>
-                <input type="submit" value="Submit"></button>
-            </form>
-        </body>
-    </html>"#;
-
-    Ok(HttpResponse::Ok().body(html))
+    let mut buffer = Vec::new();
+    NamedFile::open("static/html/index.html")?.file().read_to_end(&mut buffer)?;
+    Ok(HttpResponse::Ok().body(buffer))
 }
 
 pub fn register(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
