@@ -57,7 +57,7 @@ fn main() {
                     .secure(true),
             ))
             .service(web::resource("/").route(web::get().to(index)))
-            .service(actix_files::Files::new("/static/js", "./static/js/").show_files_listing())
+            .service(actix_files::Files::new("/static/js", "./static/dist/").show_files_listing())
             .service(actix_files::Files::new("/static/css", "./static/css/").show_files_listing())
             .service(actix_files::Files::new("/static/img", "./static/img/").show_files_listing())
             .service(web::resource("/health/").route(web::get().to(get_health)))
