@@ -320,6 +320,7 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
                 )),
         )
         .select((
+            saq::id,
             saq::name,
             saq::available_online,
             saq::country,
@@ -355,6 +356,7 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     }
 
     let wines: Vec<(
+        i32,
         String,
         bool,
         String,
@@ -368,6 +370,7 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
     )> = wines_query.load(&conn).unwrap();
 
     let results: Vec<(
+        &i32,
         &String,
         &bool,
         &String,
@@ -389,9 +392,10 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
                 &wine.4,
                 &wine.5,
                 &wine.6,
-                format!("{} ml", &wine.7),
-                format!("$ {}", &wine.8),
-                &wine.9,
+                &wine.7,
+                format!("{} ml", &wine.8),
+                format!("$ {}", &wine.9),
+                &wine.10,
             )
         })
         .collect();

@@ -14,34 +14,6 @@
     <script async="true" src="static/js/bundle.js"></script>
     <body>
         <h1>Wine Collections</h1>
-        <section>
-            <form action="" class="form-inline">
-                <div class="form-group">
-                    <label for="max-price">Maximum Price ($CAD)</label>
-                    <input
-                        id="max-price"
-                        type="number"
-                        min="0"
-                        class="form-control"
-                        placeholder="20.00"
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="min-rating">Minimum Rating:</label> <span>15</span>
-                    <input type="range" class="custom-range" min="1" max="20" id="min-rating" />
-                </div>
-                <div class="custom-control custom-checkbox">
-                    <input
-                        type="checkbox"
-                        id="available-online"
-                        name="available-online"
-                        class="custom-control-input"
-                    />
-                    <label class="custom-control-label" for="available-online"
-                        >Available Online</label
-                    >
-                </div>
-            </form>
-        </section>
+        <div id="app"></div>
     </body>
 </html>
