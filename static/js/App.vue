@@ -43,6 +43,7 @@
 
 <script>
 import axios from 'axios';
+import _ from 'lodash';
 import WinesTable from './WinesTable.vue';
 
 export default {
@@ -55,14 +56,14 @@ export default {
         }
     },
     methods: {
-        refresh_data (val, preVal) {
-            let self = this;
+        refresh_data () {
+            const self = this;
             axios
                 .get('/wines/', {
                     params: {
-                        max_price: this.max_price,
-                        min_rating: this.min_rating,
-                        available_online: this.available_online
+                        max_price: self.max_price,
+                        min_rating: self.min_rating,
+                        available_online: self.available_online
                     }
                 })
                 .then(function(response) {
@@ -70,16 +71,27 @@ export default {
                 })
                 .catch(function(error) {
                     console.log(error);
-                });
+                });    
+        },
+        safe_refresh_data (val, pre_val) {
+            this.debounce_refresh_data();
         }
     },
+    created: function () {
+        // _.debounce is a function provided by lodash to limit how
+        // often a particularly expensive operation can be run.
+        // In this case, we want to limit how often we access
+        // yesno.wtf/api, waiting until the user has completely
+        // finished typing before making the ajax request. To learn
+        // more about the _.debounce function (and its cousin
+        // _.throttle), visit: https://lodash.com/docs#debounce
+        this.debounce_refresh_data = _.debounce(this.refresh_data, 500);
+        this.debounce_refresh_data();
+    },
     watch: {
-        max_price: 'refresh_data',
-        min_rating: {
-            handler: 'refresh_data',
-            immediate: true
-        },
-        available_online: 'refresh_data'
+        max_price: 'safe_refresh_data',
+        min_rating: 'safe_refresh_data',
+        available_online: 'safe_refresh_data'
     },
     components: {
         'wines-table': WinesTable
