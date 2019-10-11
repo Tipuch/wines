@@ -37,13 +37,13 @@
                 </div>
             </form>
         </section>
-        <wines v-bind:wine_color="wine_color" v-bind:wine_recommendations="wine_recommendations" />
+        <wines-table v-bind:wine_color="wine_color" v-bind:wines="wines" />
     </div>
 </template>
 
 <script>
 import axios from 'axios';
-import Wines from './Wines.vue';
+import WinesTable from './WinesTable.vue';
 
 export default {
     data() {
@@ -53,10 +53,11 @@ export default {
             wine_color: 'red',
             available_online: true,
             wines: []
-        };
+        }
     },
     methods: {
-        refresh_data: function(val, preVal) {
+        refresh_data (val, preVal) {
+            let self = this;
             axios
                 .get('/wines/', {
                     params: {
@@ -66,8 +67,9 @@ export default {
                     }
                 })
                 .then(function(response) {
-                    this.wines = JSON.parse(response.data).results;
-                    console.log(this.wines);
+                    console.log(response);
+                    self.wines = response.data.results;
+                    console.log(self.wines);
                 })
                 .catch(function(error) {
                     console.log(error);
@@ -76,11 +78,14 @@ export default {
     },
     watch: {
         max_price: 'refresh_data',
-        min_rating: 'refresh_data',
+        min_rating: {
+            handler: 'refresh_data',
+            immediate: true
+        },
         available_online: 'refresh_data'
     },
     components: {
-        Wines
+        'wines-table': WinesTable
     }
 };
 </script>

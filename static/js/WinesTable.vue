@@ -57,9 +57,9 @@
                             <td>{{ wine[4] }}</td>
                             <td>{{ wine[5] }}</td>
                             <td>{{ wine[6] }}</td>
-                            <td>{{ wine[7] }}</td>
                             <td>{{ wine[8] }}</td>
                             <td>{{ wine[9] }}</td>
+                            <td>{{ wine[10] }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -94,9 +94,9 @@
                             <td>{{ wine[4] }}</td>
                             <td>{{ wine[5] }}</td>
                             <td>{{ wine[6] }}</td>
-                            <td>{{ wine[7] }}</td>
                             <td>{{ wine[8] }}</td>
                             <td>{{ wine[9] }}</td>
+                            <td>{{ wine[10] }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -131,9 +131,9 @@
                             <td>{{ wine[4] }}</td>
                             <td>{{ wine[5] }}</td>
                             <td>{{ wine[6] }}</td>
-                            <td>{{ wine[7] }}</td>
                             <td>{{ wine[8] }}</td>
                             <td>{{ wine[9] }}</td>
+                            <td>{{ wine[10] }}</td>
                         </tr>
                     </tbody>
                 </table>
