@@ -61,12 +61,13 @@ export default {
             axios
                 .get('/wines/', {
                     params: {
-                        max_price: self.max_price,
-                        min_rating: self.min_rating,
-                        available_online: self.available_online
+                        max_price: this.max_price,
+                        min_rating: this.min_rating,
+                        available_online: this.available_online
                     }
                 })
                 .then(function(response) {
+                    console.log(self);
                     self.wines = response.data.results;
                 })
                 .catch(function(error) {
