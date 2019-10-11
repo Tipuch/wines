@@ -37,7 +37,7 @@
                 </div>
             </form>
         </section>
-        <wines-table v-bind:wine_color="wine_color" v-bind:wines="wines" />
+        <wines-table v-bind:wines="wines" />
     </div>
 </template>
 
@@ -50,7 +50,6 @@ export default {
         return {
             max_price: 20,
             min_rating: 14,
-            wine_color: 'red',
             available_online: true,
             wines: []
         }

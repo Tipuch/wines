@@ -3,6 +3,7 @@
         <ul class="nav nav-tabs">
             <li class="nav-item">
                 <a
+                    href="#red-wines"
                     v-on:click="wine_color='red'"
                     class="nav-link"
                     v-bind:class="{ active: wine_color === 'red' }"
@@ -11,6 +12,7 @@
             </li>
             <li class="nav-item">
                 <a
+                    href="#white-wines"
                     v-on:click="wine_color='white'"
                     class="nav-link"
                     v-bind:class="{ active: wine_color === 'white' }"
@@ -19,6 +21,7 @@
             </li>
             <li class="nav-item">
                 <a
+                    href="#pink-wines"
                     v-on:click="wine_color='pink'"
                     class="nav-link"
                     v-bind:class="{ active: wine_color === 'pink' }"
@@ -144,6 +147,11 @@
 
 <script>
 export default {
-    props: ['wine_color', 'wines']
+    props: ['wines'],
+    data() {
+        return {
+            wine_color: "red"
+        };
+    }
 };
 </script>
