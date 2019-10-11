@@ -57,9 +57,6 @@ export default {
     },
     methods: {
         refresh_data () {
-            const self = this;
-            console.log("THIS", this);
-            console.log("SELF 1", self);
             axios
                 .get('/wines/', {
                     params: {
@@ -68,11 +65,10 @@ export default {
                         available_online: this.available_online
                     }
                 })
-                .then(function(response) {
-                    console.log("SELF 2", self);
-                    self.wines = response.data.results;
+                .then((response) => {
+                    this.wines = response.data.results;
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     console.log(error);
                 });    
         },
