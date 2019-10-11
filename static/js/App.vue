@@ -67,9 +67,7 @@ export default {
                     }
                 })
                 .then(function(response) {
-                    console.log(response);
                     self.wines = response.data.results;
-                    console.log(self.wines);
                 })
                 .catch(function(error) {
                     console.log(error);
