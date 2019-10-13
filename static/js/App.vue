@@ -1,7 +1,7 @@
 <template>
     <div>
         <section>
-            <form action class="form-inline">
+            <form onsubmit="return false;" class="form-inline">
                 <div class="form-group">
                     <label for="max-price">Maximum Price ($CAD)</label>
                     <input
@@ -15,7 +15,7 @@
                 </div>
                 <div class="form-group">
                     <label for="min-rating">Minimum Rating:</label>
-                    <span>{{ min_rating }}</span>
+                    <span>{{ min_rating }}/20</span>
                     <input
                         type="range"
                         class="custom-range"
