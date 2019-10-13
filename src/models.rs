@@ -1,11 +1,11 @@
+use argon2rs::{argon2i_simple, defaults, Argon2, Variant};
 use bigdecimal::BigDecimal;
 use diesel;
-use diesel::query_dsl::RunQueryDsl;
 use diesel::prelude::PgConnection;
-use std::error::Error;
+use diesel::query_dsl::RunQueryDsl;
+use schema::{saq_wines, users, wine_recommendations};
 use std::env;
-use schema::{saq_wines, wine_recommendations, users};
-use argon2rs::{defaults, Argon2, Variant, argon2i_simple};
+use std::error::Error;
 use types::WineColorEnum;
 
 #[derive(Queryable)]
@@ -23,11 +23,11 @@ pub struct SaqWine {
     pub alcohol_percent: BigDecimal,
     pub color: WineColorEnum,
     pub grape_varieties: Vec<String>,
-    pub available_online: bool
+    pub available_online: bool,
 }
 
 #[derive(Insertable)]
-#[table_name="saq_wines"]
+#[table_name = "saq_wines"]
 pub struct NewSaqWine<'a> {
     pub name: &'a str,
     pub country: &'a str,
@@ -40,14 +40,24 @@ pub struct NewSaqWine<'a> {
     pub alcohol_percent: &'a BigDecimal,
     pub color: &'a WineColorEnum,
     pub grape_varieties: &'a Vec<String>,
-    pub available_online: &'a bool
+    pub available_online: &'a bool,
 }
 
-pub fn create_saq_wine<'a>(conn: &PgConnection, name: &'a str, country: &'a str, region: &'a str, 
-designation_of_origin: &'a str, regulated_designation: &'a bool, producer: &'a str,
-volume: &'a BigDecimal, price: &'a BigDecimal, alcohol_percent: &'a BigDecimal,
-color: &'a WineColorEnum, grape_varieties: &'a Vec<String>, available_online: &'a bool) -> SaqWine {
-
+pub fn create_saq_wine<'a>(
+    conn: &PgConnection,
+    name: &'a str,
+    country: &'a str,
+    region: &'a str,
+    designation_of_origin: &'a str,
+    regulated_designation: &'a bool,
+    producer: &'a str,
+    volume: &'a BigDecimal,
+    price: &'a BigDecimal,
+    alcohol_percent: &'a BigDecimal,
+    color: &'a WineColorEnum,
+    grape_varieties: &'a Vec<String>,
+    available_online: &'a bool,
+) -> SaqWine {
     let new_saq_wine = NewSaqWine {
         name: name,
         country: country,
@@ -60,7 +70,7 @@ color: &'a WineColorEnum, grape_varieties: &'a Vec<String>, available_online: &'
         alcohol_percent: alcohol_percent,
         color: color,
         grape_varieties: grape_varieties,
-        available_online: available_online
+        available_online: available_online,
     };
 
     diesel::insert_into(saq_wines::table)
@@ -81,11 +91,11 @@ pub struct WineRecommendation {
     pub color: WineColorEnum,
     pub grape_variety: String,
     pub user_id: Option<i32>,
-    pub name: String
+    pub name: String,
 }
 
 #[derive(Insertable, Serialize, Deserialize)]
-#[table_name="wine_recommendations"]
+#[table_name = "wine_recommendations"]
 pub struct NewWineRecommendation {
     pub country: String,
     pub region: String,
@@ -95,10 +105,13 @@ pub struct NewWineRecommendation {
     pub color: WineColorEnum,
     pub grape_variety: String,
     pub user_id: Option<i32>,
-    pub wine_name: String
+    pub wine_name: String,
 }
 
-pub fn create_wine_recommendation<'a>(conn: &PgConnection, new_wine_recommendation: &'a NewWineRecommendation) -> WineRecommendation {
+pub fn create_wine_recommendation<'a>(
+    conn: &PgConnection,
+    new_wine_recommendation: &'a NewWineRecommendation,
+) -> WineRecommendation {
     diesel::insert_into(wine_recommendations::table)
         .values(new_wine_recommendation)
         .get_result(conn)
@@ -120,16 +133,16 @@ pub struct User {
     pub email: String,
     pub admin: bool,
     pub salt: Vec<u8>,
-    pub password: Vec<u8>
+    pub password: Vec<u8>,
 }
 
 #[derive(Insertable)]
-#[table_name="users"]
+#[table_name = "users"]
 pub struct NewUser<'a> {
     pub email: &'a str,
     pub admin: &'a bool,
     pub salt: &'a Vec<u8>,
-    pub password: &'a Vec<u8>
+    pub password: &'a Vec<u8>,
 }
 
 pub fn hash_password(password: &String, salt: Vec<u8>) -> Vec<u8> {
@@ -144,13 +157,18 @@ pub fn compute_salt(email: &String) -> Vec<u8> {
     argon2i_simple(email, &secret_key).to_vec()
 }
 
-pub fn create_user<'a>(conn: &PgConnection, email: &'a str, admin: &'a bool,
-salt: &'a Vec<u8>, password: &'a Vec<u8>) -> User{
+pub fn create_user<'a>(
+    conn: &PgConnection,
+    email: &'a str,
+    admin: &'a bool,
+    salt: &'a Vec<u8>,
+    password: &'a Vec<u8>,
+) -> User {
     let user = NewUser {
         email: email,
         admin: admin,
         salt: salt,
-        password: password
+        password: password,
     };
     diesel::insert_into(users::table)
         .values(&user)

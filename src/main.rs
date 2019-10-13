@@ -18,6 +18,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate diesel;
 extern crate bigdecimal;
+extern crate dotenv;
 extern crate openssl;
 mod controllers;
 mod crawler;
@@ -25,6 +26,7 @@ mod errors;
 mod models;
 mod schema;
 mod types;
+mod utils;
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::*;
 use actix_web::{middleware, App, HttpServer};
@@ -42,9 +44,12 @@ pub fn establish_connection() -> PgConnection {
 fn main() {
     let domain: String = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
     let bind_address = "127.0.0.1:8080";
+    let is_localhost = domain == "localhost";
+    if is_localhost {
+        dotenv::dotenv().ok();
+    }
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
     let sys = actix_rt::System::new("wines");
-    let is_localhost = domain == "localhost";
     let serv = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())

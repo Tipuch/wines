@@ -1,12 +1,12 @@
-use diesel::pg::{Pg};
 use diesel::deserialize;
 use diesel::deserialize::FromSql;
+use diesel::pg::Pg;
 use diesel::serialize;
-use diesel::serialize::{Output, ToSql, IsNull};
-use std::io::Write;
-use std::fmt;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use diesel::serialize::{IsNull, Output, ToSql};
 use serde::de::{self, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt;
+use std::io::Write;
 
 #[derive(SqlType)]
 #[postgres(type_name = "wine_color")]
@@ -18,7 +18,7 @@ pub struct Wine_color;
 pub enum WineColorEnum {
     Red,
     White,
-    Pink
+    Pink,
 }
 
 struct WineColorVisitor;
@@ -38,7 +38,7 @@ impl<'de> Visitor<'de> for WineColorVisitor {
             "red" => Ok(WineColorEnum::Red),
             "white" => Ok(WineColorEnum::White),
             "pink" => Ok(WineColorEnum::Pink),
-            _ => Err(de::Error::custom(format!("invalid wine color: {}", value)))
+            _ => Err(de::Error::custom(format!("invalid wine color: {}", value))),
         }
     }
 }
@@ -60,7 +60,7 @@ impl Serialize for WineColorEnum {
         match *self {
             WineColorEnum::Red => serializer.serialize_str("red"),
             WineColorEnum::White => serializer.serialize_str("white"),
-            WineColorEnum::Pink => serializer.serialize_str("pink")
+            WineColorEnum::Pink => serializer.serialize_str("pink"),
         }
     }
 }

@@ -47,8 +47,4 @@ table! {
 
 joinable!(wine_recommendations -> users (user_id));
 
-allow_tables_to_appear_in_same_query!(
-    saq_wines,
-    users,
-    wine_recommendations,
-);
+allow_tables_to_appear_in_same_query!(saq_wines, users, wine_recommendations,);

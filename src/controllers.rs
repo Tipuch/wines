@@ -23,6 +23,7 @@ use std::io::Read;
 use std::str::FromStr;
 use std::{env, thread};
 use types::WineColorEnum;
+use utils::is_dup_wine;
 #[derive(Deserialize)]
 pub struct UserForm {
     email: String,
@@ -355,7 +356,7 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
         wines_query = wines_query.filter(recos::user_id.eq(user.unwrap().id));
     }
 
-    let wines: Vec<(
+    let mut wines: Vec<(
         i32,
         String,
         bool,
@@ -368,6 +369,20 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
         BigDecimal,
         i32,
     )> = wines_query.load(&conn).unwrap();
+
+    /* in some cases it's possible we have duplicates in our results
+    (same bottle returned by different recommendations)
+    we want to remove these duplicates and keep the recommendation
+     with the bigger rating */
+
+    let mut i = 0;
+    while i != wines.len() {
+        if is_dup_wine(&wines, &wines[i], i) {
+            wines.remove(i);
+        } else {
+            i += 1;
+        }
+    }
 
     let results: Vec<(
         &i32,

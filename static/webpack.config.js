@@ -4,7 +4,7 @@ const { VueLoaderPlugin } = require('vue-loader');
 module.exports = {
     // Set debugging source maps to be "inline" for
     // simplicity and ease of use
-    mode: 'production',
+    mode: 'development',
     devtool: 'inline-source-map',
     // The application entry point
     entry: './js/index.js',
