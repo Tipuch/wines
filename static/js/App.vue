@@ -57,17 +57,19 @@ export default {
     },
     methods: {
         refresh_data () {
-            axios
-                .get('/wines/', {
-                    params: {
-                        max_price: this.max_price,
-                        min_rating: this.min_rating,
-                        available_online: this.available_online
-                    }
+            let data = {
+                min_rating: this.min_rating,
+                available_online: this.available_online
+            };
+            if (this.max_price) {
+                data[max_price] = this.max_price;
+            }
+
+            axios.get('/wines/', {
+                    params: data
                 })
                 .then((response) => {
                     this.wines = response.data.results;
-                    console.log(response.data.results);
                 })
                 .catch((error) => {
                     console.log(error);
