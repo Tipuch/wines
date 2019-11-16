@@ -62,7 +62,7 @@ export default {
                 available_online: this.available_online
             };
             if (this.max_price) {
-                data[max_price] = this.max_price;
+                data["max_price"] = this.max_price;
             }
 
             axios.get('/wines/', {
