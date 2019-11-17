@@ -1,4 +1,4 @@
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel;
 use diesel::RunQueryDsl;
 use establish_connection;
@@ -135,7 +135,12 @@ fn crawl_saq_wine(detail_page_url: &str) {
                 BigDecimal::from_str(&volume_text[..volume_text.find("L").unwrap()].trim())
                     .unwrap();
 
-            Some((volume_liters * BigDecimal::from_str("1000").unwrap()).to_string())
+            Some(
+                (volume_liters * BigDecimal::from_str("1000").unwrap())
+                    .to_u32()
+                    .unwrap()
+                    .to_string(),
+            )
         }),
     )
     .unwrap();
