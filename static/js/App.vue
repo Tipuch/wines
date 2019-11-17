@@ -3,7 +3,7 @@
         <section>
             <form onsubmit="return false;" class="form-inline">
                 <div class="form-group">
-                    <label for="max-price">Maximum Price ($CAD)</label>
+                    <label for="max-price">Maximum Price ($CAD/750 mL)</label>
                     <input
                         id="max-price"
                         type="number"

@@ -346,7 +346,9 @@ pub fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
         if max_price.is_err() {
             return Ok(HttpResponse::new(http::StatusCode::BAD_REQUEST));
         }
-        wines_query = wines_query.filter(saq::price.le(max_price.unwrap()));
+        // one bottle is considered to be 750 mL
+        let max_bottle_price = max_price.unwrap() / BigDecimal::from_str("750").unwrap();
+        wines_query = wines_query.filter((saq::price / saq::volume).le(max_bottle_price));
     }
     if wine_criteria.available_online.is_some() {
         wines_query =
