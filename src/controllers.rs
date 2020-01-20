@@ -1,29 +1,30 @@
+use crate::crawler::crawl_saq;
+use crate::errors::LoginError;
+use crate::establish_connection;
+use crate::models::{
+    compute_salt, create_user, create_wine_recommendation, hash_password, NewWineRecommendation,
+    User, WineRecommendation,
+};
+use crate::schema::{saq_wines as saq, users, wine_recommendations as recos};
+use crate::types::WineColorEnum;
+use crate::utils::is_dup_wine;
 use actix_files::NamedFile;
 use actix_identity::Identity;
 use actix_web::http::header::ContentType;
 use actix_web::http::header::AUTHORIZATION;
 use actix_web::{error, http, web, Error, FromRequest, HttpRequest, HttpResponse, ResponseError};
 use bigdecimal::BigDecimal;
-use crawler::crawl_saq;
 use diesel::pg::expression::dsl::any;
 use diesel::OptionalExtension;
 use diesel::{
     BoolExpressionMethods, ExpressionMethods, JoinOnDsl, PgTextExpressionMethods, QueryDsl,
     RunQueryDsl, TextExpressionMethods,
 };
-use errors::LoginError;
-use establish_connection;
 use futures::{future, Future};
-use models::{
-    compute_salt, create_user, create_wine_recommendation, hash_password, NewWineRecommendation,
-    User, WineRecommendation,
-};
-use schema::{saq_wines as saq, users, wine_recommendations as recos};
 use std::io::Read;
 use std::str::FromStr;
 use std::{env, thread};
-use types::WineColorEnum;
-use utils::is_dup_wine;
+
 #[derive(Deserialize)]
 pub struct UserForm {
     email: String,
@@ -113,7 +114,7 @@ pub fn register(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error =
 }
 
 pub fn login(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
-    use schema::users::dsl::*;
+    use crate::schema::users::dsl::*;
     Box::new(
         web::Json::<LoginForm>::extract(&req).then(move |login_form_result| {
             if login_form_result.is_err() {
@@ -145,7 +146,7 @@ pub fn logout(identity: Identity) -> Result<HttpResponse, error::Error> {
 }
 
 pub fn create_wine_reco(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
-    use schema::users::dsl::*;
+    use crate::schema::users::dsl::*;
 
     Box::new(
         web::Json::<NewWineRecommendation>::extract(&req).then(move |wine_reco_result| {
@@ -171,7 +172,7 @@ pub fn create_wine_reco(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse,
 }
 
 pub fn get_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> {
-    use schema::users::dsl::*;
+    use crate::schema::users::dsl::*;
     let identity = Identity::extract(&req).unwrap();
     let conn = establish_connection();
     if identity.identity().is_some() {
@@ -190,8 +191,8 @@ pub fn get_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> {
 }
 
 pub fn update_wine_reco(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
-    use schema::users::dsl::*;
-    use schema::wine_recommendations;
+    use crate::schema::users::dsl::*;
+    use crate::schema::wine_recommendations;
 
     Box::new(
         web::Json::<WineRecommendationForm>::extract(&req).then(move |wine_reco_result| {
@@ -237,8 +238,8 @@ pub fn update_wine_reco(req: HttpRequest) -> Box<dyn Future<Item = HttpResponse,
 }
 
 pub fn delete_wine_reco(req: HttpRequest) -> Result<HttpResponse, error::Error> {
-    use schema::users::dsl::*;
-    use schema::wine_recommendations;
+    use crate::schema::users::dsl::*;
+    use crate::schema::wine_recommendations;
 
     let identity = Identity::extract(&req).unwrap();
     let conn = establish_connection();

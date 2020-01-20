@@ -1,11 +1,11 @@
+use crate::establish_connection;
+use crate::models::{create_saq_wine, parse_wine_color};
+use crate::schema::saq_wines;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel;
 use diesel::RunQueryDsl;
-use establish_connection;
-use models::{create_saq_wine, parse_wine_color};
 use reqwest;
 use reqwest::Result as ReqwestResult;
-use schema::saq_wines;
 use select::document::Document;
 use select::node::Node;
 use select::predicate::{Attr, Class, Name, Predicate};

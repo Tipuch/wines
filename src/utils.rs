@@ -1,5 +1,5 @@
+use crate::types::WineColorEnum;
 use bigdecimal::BigDecimal;
-use types::WineColorEnum;
 
 pub fn is_dup_wine(
     wines: &Vec<(

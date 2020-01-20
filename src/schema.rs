@@ -1,5 +1,5 @@
 table! {
-    use types::Wine_color;
+    use crate::types::Wine_color;
     use diesel::sql_types::*;
     saq_wines (id) {
         id -> Int4,
@@ -29,7 +29,7 @@ table! {
 }
 
 table! {
-    use types::Wine_color;
+    use crate::types::Wine_color;
     use diesel::sql_types::*;
     wine_recommendations (id) {
         id -> Int4,

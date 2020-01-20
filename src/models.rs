@@ -1,12 +1,12 @@
+use crate::schema::{saq_wines, users, wine_recommendations};
+use crate::types::WineColorEnum;
 use argon2rs::{argon2i_simple, defaults, Argon2, Variant};
 use bigdecimal::BigDecimal;
 use diesel;
 use diesel::prelude::PgConnection;
 use diesel::query_dsl::RunQueryDsl;
-use schema::{saq_wines, users, wine_recommendations};
 use std::env;
 use std::error::Error;
-use types::WineColorEnum;
 
 #[derive(Queryable)]
 pub struct SaqWine {
