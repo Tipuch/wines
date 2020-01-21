@@ -41,7 +41,8 @@ pub fn establish_connection() -> PgConnection {
     PgConnection::establish(&database_url).expect(&format!("Error connection to {}", database_url))
 }
 
-fn main() {
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
     let domain: String = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
     let bind_address = "127.0.0.1:8080";
     let is_localhost = domain == "localhost";
@@ -49,7 +50,6 @@ fn main() {
         dotenv::dotenv().ok();
     }
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
-    let sys = actix_rt::System::new("wines");
     let serv = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
@@ -83,8 +83,9 @@ fn main() {
             )
     });
 
+    println!("Started http server: {}", bind_address);
     if is_localhost {
-        serv.bind(bind_address).unwrap().start();
+        return serv.bind(bind_address)?.run().await;
     } else {
         let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
         builder
@@ -93,8 +94,6 @@ fn main() {
         builder
             .set_certificate_chain_file("/etc/nginx/winecollections.ca.pem")
             .unwrap();
-        serv.bind_ssl(bind_address, builder).unwrap().start();
+        return serv.bind_openssl(bind_address, builder)?.run().await;
     }
-    println!("Started http server: {}", bind_address);
-    let _ = sys.run();
 }

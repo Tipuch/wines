@@ -5,33 +5,32 @@ use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel;
 use diesel::RunQueryDsl;
 use reqwest;
-use reqwest::Result as ReqwestResult;
 use select::document::Document;
 use select::node::Node;
 use select::predicate::{Attr, Class, Name, Predicate};
 use std::str::FromStr;
 
-fn get_document(url: &String) -> ReqwestResult<String> {
-    let client = reqwest::Client::builder().timeout(None).build()?;
-    let result = client.get(url).send()?.text()?;
+async fn get_document(url: &str) -> Result<String, reqwest::Error> {
+    let client = reqwest::Client::builder().build()?;
+    let result = client.get(url).send().await?.text().await?;
     Ok(result)
 }
 
-pub fn crawl_saq(origin_url: &String) {
+pub async fn crawl_saq(origin_url: &String) {
     let connection = establish_connection();
     // delete all previous saq_wines present
     diesel::delete(saq_wines::table)
         .execute(&connection)
         .expect("Error deleting saq_wines");
-    let mut document = Document::from(&*get_document(origin_url).unwrap());
+    let mut document = Document::from(&*get_document(origin_url).await.unwrap());
     let mut next_page = get_next_page(&document);
     while next_page.is_some() {
         for node in document
             .find(Attr("id", "resultatRecherche").descendant(Class("nom").descendant(Name("a"))))
         {
-            crawl_saq_wine(node.attr("href").unwrap());
+            crawl_saq_wine(node.attr("href").unwrap()).await;
         }
-        document = Document::from(&*get_document(&next_page.unwrap()).unwrap());
+        document = Document::from(&*get_document(&next_page.unwrap()).await.unwrap());
         next_page = get_next_page(&document);
     }
     println!("Success ! :)");
@@ -57,14 +56,15 @@ fn get_next_page(document: &Document) -> Option<String> {
     Some(onclick_attr[url_begin_index..url_end_index].to_string())
 }
 
-fn crawl_saq_wine(detail_page_url: &str) {
+async fn crawl_saq_wine(detail_page_url: &str) {
     let connection = establish_connection();
-    let response = get_document(&String::from(detail_page_url));
-    if response.is_err() {
+    let response = get_document(detail_page_url);
+    let result = response.await;
+    if result.is_err() {
         println!("There was an error fetching wine {}", detail_page_url);
         return;
     }
-    let document = Document::from(&*response.unwrap());
+    let document = Document::from(&*result.unwrap());
 
     let name = document
         .find(Class("product-description-title"))
