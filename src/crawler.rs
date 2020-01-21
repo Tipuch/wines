@@ -145,7 +145,7 @@ async fn crawl_saq_wine(detail_page_url: &str) {
     )
     .unwrap();
 
-    let alcohol_percent: BigDecimal = parse_wine_info(
+    let alcohol_percent_option = parse_wine_info(
         &document,
         "Degree of alcohol",
         Box::new(|node: &Node| {
@@ -156,10 +156,13 @@ async fn crawl_saq_wine(detail_page_url: &str) {
             .unwrap();
             Some(alcohol_percent.to_string())
         }),
-    )
-    .unwrap()
-    .parse()
-    .unwrap();
+    );
+    let alcohol_percent: BigDecimal;
+    if alcohol_percent_option.is_some() {
+        alcohol_percent = alcohol_percent_option.unwrap().parse().unwrap();
+    } else {
+        alcohol_percent = BigDecimal::from(0);
+    }
 
     let wine_color = parse_wine_info(&document, "colour", Box::new(default_parsing_func)).unwrap();
 
