@@ -20,11 +20,10 @@ use diesel::{
     BoolExpressionMethods, ExpressionMethods, JoinOnDsl, PgTextExpressionMethods, QueryDsl,
     RunQueryDsl, TextExpressionMethods,
 };
-use futures::executor::block_on;
 use std::io::Read;
 use std::str::FromStr;
-use std::env;
-use tokio;
+use std::{env, thread};
+use tokio::runtime::Runtime;
 
 #[derive(Deserialize)]
 pub struct UserForm {
@@ -67,11 +66,12 @@ pub async fn crawl_saq_controller(req: HttpRequest) -> Result<HttpResponse, erro
     {
         return Err(error::ErrorForbidden(""));
     }
-    tokio::spawn(async {
+    thread::spawn(move || {
+        let rt = Runtime::new();
         let origin_url = String::from("https://www.saq.com/webapp/wcs/stores/servlet/SearchDisplay?pageSize=20&searchTerm=*&catalogId=50000&orderBy=1&facet=adi_f9%3A%221%22%7Cadi_f9%3A%221%22&categoryIdentifier=06&beginIndex=0&langId=-1&showOnly=product&categoryId=39919&storeId=20002&metaData=");
-        // spawn tokio runtime for asynchronously start the crawling
-        block_on(crawl_saq(&origin_url));
+        rt.unwrap().block_on(crawl_saq(&origin_url));
     });
+    
     Ok(HttpResponse::Ok().body("Crawl has been started"))
 }
 
