@@ -54,8 +54,11 @@
                             v-for="wine in wines.filter(wine => wine[7] === 'red')"
                             v-bind:key="wine[0]"
                         >
-                            <td>{{ wine[1] }}</td>
-                            <td>{{ wine[2] }}</td>
+                            <td>
+                                <a v-bind:href="wine[1] | getSaqUrl" target="_blank">{{ wine[1] }}</a>
+                            </td>
+                            <td v-if="wine[2]">yes</td>
+                            <td v-else>no</td>
                             <td>{{ wine[3] }}</td>
                             <td>{{ wine[4] }}</td>
                             <td>{{ wine[5] }}</td>
@@ -91,8 +94,11 @@
                             v-for="wine in wines.filter(wine => wine[7] === 'white')"
                             v-bind:key="wine[0]"
                         >
-                            <td>{{ wine[1] }}</td>
-                            <td>{{ wine[2] }}</td>
+                            <td>
+                                <a v-bind:href="wine[1] | getSaqUrl" target="_blank">{{ wine[1] }}</a>
+                            </td>
+                            <td v-if="wine[2]">yes</td>
+                            <td v-else>no</td>
                             <td>{{ wine[3] }}</td>
                             <td>{{ wine[4] }}</td>
                             <td>{{ wine[5] }}</td>
@@ -128,8 +134,11 @@
                             v-for="wine in wines.filter(wine => wine[7] === 'pink')"
                             v-bind:key="wine[0]"
                         >
-                            <td>{{ wine[1] }}</td>
-                            <td>{{ wine[2] }}</td>
+                            <td>
+                                <a v-bind:href="wine[1] | getSaqUrl" target="_blank">{{ wine[1] }}</a>
+                            </td>
+                            <td v-if="wine[2]">yes</td>
+                            <td v-else>no</td>
                             <td>{{ wine[3] }}</td>
                             <td>{{ wine[4] }}</td>
                             <td>{{ wine[5] }}</td>
@@ -147,10 +156,17 @@
 
 <script>
 export default {
+    filters: {
+        getSaqUrl: function(wine_name) {
+            return `https://www.saq.com/webapp/wcs/stores/servlet/SearchDisplay?storeId=20002&catalogId=50000&langId=-1&pageSize=20&beginIndex=0&searchCategory=Entete&searchTerm=${encodeURIComponent(
+                wine_name
+            )}`;
+        }
+    },
     props: ['wines'],
     data() {
         return {
-            wine_color: "red"
+            wine_color: 'red'
         };
     }
 };
