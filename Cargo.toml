@@ -1,16 +1,16 @@
 [package]
 edition = "2018"
 name = "wines"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["jp <fiorini751@gmail.com>"]
 
 [dependencies]
 futures = "0.3.1"
-rand = "0.4.3"
-csv = "1.0.7"
-serde = "1.0.90"
-serde_derive = "1.0.90"
-serde_json = "1.0.39"
+rand = "0.7.3"
+csv = "1.1.2"
+serde = "1.0.104"
+serde_derive = "1.0.104"
+serde_json = "1.0.44"
 openssl = { version = "0.10.26", features = ["v110"] }
 actix-rt = "1.0.0"
 actix-files = "0.2.1"

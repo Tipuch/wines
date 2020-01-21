@@ -1,14 +1,5 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 extern crate actix_files;
-extern crate actix_identity;
-extern crate actix_rt;
-extern crate actix_web;
-extern crate argon2rs;
-extern crate csv;
-extern crate futures;
-extern crate reqwest;
-extern crate select;
-extern crate serde;
 #[macro_use]
 extern crate failure;
 #[macro_use]
@@ -17,9 +8,6 @@ extern crate serde_derive;
 extern crate serde_json;
 #[macro_use]
 extern crate diesel;
-extern crate bigdecimal;
-extern crate dotenv;
-extern crate openssl;
 mod controllers;
 mod crawler;
 mod errors;
