@@ -1,41 +1,44 @@
 <template>
     <div>
         <section>
-            <form onsubmit="return false;" class="form-inline">
-                <div class="form-group">
-                    <label for="max-price">Maximum Price ($CAD/750 mL)</label>
-                    <input
-                        id="max-price"
-                        type="number"
-                        min="0"
-                        class="form-control"
-                        placeholder="20.00"
-                        v-model="max_price"
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="min-rating">Minimum Rating:</label>
-                    <span>{{ min_rating }}/20</span>
-                    <input
-                        type="range"
-                        class="custom-range"
-                        min="1"
-                        max="20"
-                        id="min-rating"
-                        v-model="min_rating"
-                    />
-                </div>
-                <div class="custom-control custom-checkbox">
-                    <input
-                        type="checkbox"
-                        id="available-online"
-                        name="available-online"
-                        class="custom-control-input"
-                        v-model="available_online"
-                    />
-                    <label class="custom-control-label" for="available-online">Available Online</label>
-                </div>
-            </form>
+            <div class="filters">
+                <form onsubmit="return false;" class="form-inline">
+                    <div class="form-group">
+                        <label for="max-price">Maximum Price ($/750 ml)</label>
+                        <input
+                            id="max-price"
+                            type="number"
+                            min="0"
+                            class="form-control"
+                            placeholder="20.00"
+                            v-model="max_price"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label for="min-rating">Minimum Rating:</label>
+                        <span>{{ min_rating }}/20</span>
+                        <input
+                            type="range"
+                            class="custom-range"
+                            min="1"
+                            max="20"
+                            id="min-rating"
+                            v-model="min_rating"
+                        />
+                    </div>
+                    <div class="custom-control custom-checkbox">
+                        <input
+                            type="checkbox"
+                            id="available-online"
+                            name="available-online"
+                            class="custom-control-input"
+                            v-model="available_online"
+                        />
+                        <label class="custom-control-label" for="available-online">Available Online</label>
+                    </div>
+                </form>
+                <p>The results are filtered by $ per ml in ascending order.</p>
+            </div>
         </section>
         <wines-table v-bind:wines="wines" />
     </div>
@@ -53,33 +56,34 @@ export default {
             min_rating: 14,
             available_online: true,
             wines: []
-        }
+        };
     },
     methods: {
-        refresh_data () {
+        refresh_data() {
             let data = {
                 min_rating: this.min_rating,
                 available_online: this.available_online
             };
             if (this.max_price) {
-                data["max_price"] = this.max_price;
+                data['max_price'] = this.max_price;
             }
 
-            axios.get('/wines/', {
+            axios
+                .get('/wines/', {
                     params: data
                 })
-                .then((response) => {
+                .then(response => {
                     this.wines = response.data.results;
                 })
-                .catch((error) => {
+                .catch(error => {
                     console.log(error);
-                });    
+                });
         },
-        safe_refresh_data (val, pre_val) {
+        safe_refresh_data(val, pre_val) {
             this.debounce_refresh_data();
         }
     },
-    created: function () {
+    created: function() {
         // _.debounce is a function provided by lodash to limit how
         // often a particularly expensive operation can be run.
         // In this case, we want to limit how often we access

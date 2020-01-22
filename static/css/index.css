@@ -8,14 +8,43 @@ h1 {
     font-size: 450%;
 }
 
-section {
-    margin: 5% auto;
+h3 {
+    margin-top: 5%;
+    text-align: center;
 }
 
-.form-group {
+section {
+    margin: 2% auto;
+}
+
+.form-group,
+p {
     margin: 0 1%;
 }
 
 .form-group span {
     margin-left: 2%;
+}
+
+.form-group input[type='number'] {
+    margin-left: 5%;
+    width: 20%;
+    -moz-appearance: textfield;
+}
+
+.form-group input[type='number']::-webkit-inner-spin-button,
+.form-group input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+.filters {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.5%;
+    width: 60%;
+    margin: 0 1%;
+    border-radius: 10px;
+    border: 0.5px solid lightgrey;
 }
