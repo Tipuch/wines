@@ -1,5 +1,6 @@
 const webpack = require('webpack');
 const { VueLoaderPlugin } = require('vue-loader');
+const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
 
 module.exports = {
     // Set debugging source maps to be "inline" for
@@ -27,8 +28,28 @@ module.exports = {
                 loader: 'vue-loader'
             },
             {
-                test: /\.css$/i,
-                use: ['style-loader', 'css-loader']
+                test: /\.s(c|a)ss$/,
+                use: [
+                    'vue-style-loader',
+                    'css-loader',
+                    {
+                        loader: 'sass-loader',
+                        // Requires sass-loader@^7.0.0
+                        options: {
+                            implementation: require('sass'),
+                            fiber: require('fibers'),
+                            indentedSyntax: true // optional
+                        },
+                        // Requires sass-loader@^8.0.0
+                        options: {
+                            implementation: require('sass'),
+                            sassOptions: {
+                                fiber: require('fibers'),
+                                indentedSyntax: true // optional
+                            }
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -38,5 +59,5 @@ module.exports = {
         extensions: ['.js']
     },
 
-    plugins: [new VueLoaderPlugin()]
+    plugins: [new VueLoaderPlugin(), new VuetifyLoaderPlugin()]
 };

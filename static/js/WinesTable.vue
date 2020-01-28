@@ -4,29 +4,32 @@
             <li class="nav-item">
                 <a
                     href="#red-wines"
-                    v-on:click="wine_color='red'"
+                    v-on:click="wine_color = 'red'"
                     class="nav-link"
                     v-bind:class="{ active: wine_color === 'red' }"
                     data-toggle="tab"
-                >Red</a>
+                    >Red</a
+                >
             </li>
             <li class="nav-item">
                 <a
                     href="#white-wines"
-                    v-on:click="wine_color='white'"
+                    v-on:click="wine_color = 'white'"
                     class="nav-link"
                     v-bind:class="{ active: wine_color === 'white' }"
                     data-toggle="tab"
-                >White</a>
+                    >White</a
+                >
             </li>
             <li class="nav-item">
                 <a
                     href="#pink-wines"
-                    v-on:click="wine_color='pink'"
+                    v-on:click="wine_color = 'pink'"
                     class="nav-link"
                     v-bind:class="{ active: wine_color === 'pink' }"
                     data-toggle="tab"
-                >Pink</a>
+                    >Pink</a
+                >
             </li>
         </ul>
         <div class="tab-content">
@@ -35,120 +38,87 @@
                 v-bind:class="{ active: wine_color === 'red' }"
                 id="red-wines"
             >
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">Name</th>
-                            <th scope="col">Available Online</th>
-                            <th scope="col">Country</th>
-                            <th scope="col">Region</th>
-                            <th scope="col">Designation of Origin</th>
-                            <th scope="col">Producer</th>
-                            <th scope="col">Volume</th>
-                            <th scope="col">Price</th>
-                            <th scope="col">Rating</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="wine in wines.filter(wine => wine[7] === 'red')"
-                            v-bind:key="wine[0]"
-                        >
-                            <td>
-                                <a v-bind:href="wine[1] | getSaqUrl" target="_blank">{{ wine[1] }}</a>
-                            </td>
-                            <td v-if="wine[2]">yes</td>
-                            <td v-else>no</td>
-                            <td>{{ wine[3] }}</td>
-                            <td>{{ wine[4] }}</td>
-                            <td>{{ wine[5] }}</td>
-                            <td>{{ wine[6] }}</td>
-                            <td>{{ wine[8] }}</td>
-                            <td>{{ wine[9] }}</td>
-                            <td>{{ wine[10] }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <v-card>
+                    <v-card-title>
+                        Red Wines
+                        <v-spacer></v-spacer>
+                        <v-text-field
+                            v-model="search"
+                            append-icon="search"
+                            label="Search"
+                            single-line
+                            hide-details
+                        ></v-text-field>
+                    </v-card-title>
+                    <v-data-table
+                        :headers="headers"
+                        :items="redWines"
+                        :items-per-page="15"
+                        :search="search"
+                        :custom-filter="filterAccentsAndCase"
+                        @click:row="openSaqTab"
+                        multi-sort
+                        class="elevation-1"
+                    ></v-data-table>
+                </v-card>
             </div>
             <div
                 class="tab-pane fade show"
                 v-bind:class="{ active: wine_color === 'white' }"
                 id="white-wines"
             >
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">Name</th>
-                            <th scope="col">Available Online</th>
-                            <th scope="col">Country</th>
-                            <th scope="col">Region</th>
-                            <th scope="col">Designation of Origin</th>
-                            <th scope="col">Producer</th>
-                            <th scope="col">Volume</th>
-                            <th scope="col">Price</th>
-                            <th scope="col">Rating</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="wine in wines.filter(wine => wine[7] === 'white')"
-                            v-bind:key="wine[0]"
-                        >
-                            <td>
-                                <a v-bind:href="wine[1] | getSaqUrl" target="_blank">{{ wine[1] }}</a>
-                            </td>
-                            <td v-if="wine[2]">yes</td>
-                            <td v-else>no</td>
-                            <td>{{ wine[3] }}</td>
-                            <td>{{ wine[4] }}</td>
-                            <td>{{ wine[5] }}</td>
-                            <td>{{ wine[6] }}</td>
-                            <td>{{ wine[8] }}</td>
-                            <td>{{ wine[9] }}</td>
-                            <td>{{ wine[10] }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <v-card>
+                    <v-card-title>
+                        White Wines
+                        <v-spacer></v-spacer>
+                        <v-text-field
+                            v-model="search"
+                            append-icon="search"
+                            label="Search"
+                            single-line
+                            hide-details
+                        ></v-text-field>
+                    </v-card-title>
+                    <v-data-table
+                        :headers="headers"
+                        :items="whiteWines"
+                        :items-per-page="15"
+                        :search="search"
+                        :custom-filter="filterAccentsAndCase"
+                        @click:row="openSaqTab"
+                        multi-sort
+                        class="elevation-1"
+                    ></v-data-table>
+                </v-card>
             </div>
             <div
                 class="tab-pane fade show"
                 v-bind:class="{ active: wine_color === 'pink' }"
                 id="pink-wines"
             >
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">Name</th>
-                            <th scope="col">Available Online</th>
-                            <th scope="col">Country</th>
-                            <th scope="col">Region</th>
-                            <th scope="col">Designation of Origin</th>
-                            <th scope="col">Producer</th>
-                            <th scope="col">Volume</th>
-                            <th scope="col">Price</th>
-                            <th scope="col">Rating</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="wine in wines.filter(wine => wine[7] === 'pink')"
-                            v-bind:key="wine[0]"
-                        >
-                            <td>
-                                <a v-bind:href="wine[1] | getSaqUrl" target="_blank">{{ wine[1] }}</a>
-                            </td>
-                            <td v-if="wine[2]">yes</td>
-                            <td v-else>no</td>
-                            <td>{{ wine[3] }}</td>
-                            <td>{{ wine[4] }}</td>
-                            <td>{{ wine[5] }}</td>
-                            <td>{{ wine[6] }}</td>
-                            <td>{{ wine[8] }}</td>
-                            <td>{{ wine[9] }}</td>
-                            <td>{{ wine[10] }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <v-card>
+                    <v-card-title>
+                        Pink Wines
+                        <v-spacer></v-spacer>
+                        <v-text-field
+                            v-model="search"
+                            append-icon="search"
+                            label="Search"
+                            single-line
+                            hide-details
+                        ></v-text-field>
+                    </v-card-title>
+                    <v-data-table
+                        :headers="headers"
+                        :items="pinkWines"
+                        :items-per-page="15"
+                        :search="search"
+                        :custom-filter="filterAccentsAndCase"
+                        @click:row="openSaqTab"
+                        multi-sort
+                        class="elevation-1"
+                    ></v-data-table>
+                </v-card>
             </div>
         </div>
     </div>
@@ -156,17 +126,91 @@
 
 <script>
 export default {
-    filters: {
-        getSaqUrl: function(wine_name) {
-            return `https://www.saq.com/webapp/wcs/stores/servlet/SearchDisplay?storeId=20002&catalogId=50000&langId=-1&pageSize=20&beginIndex=0&searchCategory=Entete&searchTerm=${encodeURIComponent(
-                wine_name
-            )}`;
-        }
-    },
-    props: ['wines'],
+    props: ['redWines', 'whiteWines', 'pinkWines'],
     data() {
         return {
-            wine_color: 'red'
+            openSaqTab: row => {
+                window.open(
+                    `https://www.saq.com/webapp/wcs/stores/servlet/SearchDisplay?storeId=20002&catalogId=50000&langId=-1&pageSize=20&beginIndex=0&searchCategory=Entete&searchTerm=${encodeURIComponent(
+                        row.name
+                    )}`,
+                    '_blank'
+                );
+            },
+            wine_color: 'red',
+            search: '',
+            filterAccentsAndCase: (value, search, item) => {
+                return (
+                    value != null &&
+                    search != null &&
+                    typeof value === 'string' &&
+                    value
+                        .toString()
+                        .toLocaleLowerCase()
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .indexOf(search) !== -1
+                );
+            },
+            headers: [
+                {
+                    text: 'Name',
+                    value: 'name'
+                },
+                {
+                    text: 'Available Online',
+                    value: 'availableOnline'
+                },
+                {
+                    text: 'Country',
+                    value: 'country'
+                },
+                {
+                    text: 'Region',
+                    value: 'region'
+                },
+                {
+                    text: 'Designation of Origin',
+                    value: 'designationOfOrigin'
+                },
+                {
+                    text: 'Producer',
+                    value: 'producer'
+                },
+                {
+                    text: 'Volume',
+                    value: 'volume',
+                    sort: (a, b) => {
+                        a = parseInt(a);
+                        b = parseInt(b);
+                        return a - b;
+                    }
+                },
+                {
+                    text: 'Price',
+                    value: 'price',
+                    sort: (a, b) => {
+                        const aIndex = a.indexOf('(');
+                        if (aIndex !== -1) {
+                            a = parseFloat(a.substring(1, aIndex));
+                        } else {
+                            a = parseFloat(a.substring(1));
+                        }
+                        const bIndex = b.indexOf('(');
+                        if (bIndex !== -1) {
+                            b = parseFloat(b.substring(1, bIndex));
+                        } else {
+                            b = parseFloat(b.substring(1));
+                        }
+
+                        return a - b;
+                    }
+                },
+                {
+                    text: 'Rating',
+                    value: 'rating'
+                }
+            ]
         };
     }
 };
