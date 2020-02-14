@@ -131,7 +131,7 @@ export default {
         return {
             openSaqTab: row => {
                 window.open(
-                    `https://www.saq.com/webapp/wcs/stores/servlet/SearchDisplay?storeId=20002&catalogId=50000&langId=-1&pageSize=20&beginIndex=0&searchCategory=Entete&searchTerm=${encodeURIComponent(
+                    `https://www.saq.com/en/catalogsearch/result/?q=${encodeURIComponent(
                         row.name
                     )}`,
                     '_blank'

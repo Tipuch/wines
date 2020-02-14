@@ -84,7 +84,7 @@ async fn crawl_saq_wine(detail_page_url: &str) {
 
     let regulated_designation_option = parse_wine_info(
         &document,
-        "Regulated designation"
+        "Regulated Designation"
     );
     let regulated_designation = designation_of_origin_option.is_some()
         && regulated_designation_option.is_some()
@@ -165,7 +165,11 @@ fn parse_price(document: &Document) -> String {
 }
 
 fn parse_grape_varieties(document: &Document) -> Vec<String> {
-    let info_node_text = document.find(Attr("data-th", "Grape variety")).next().unwrap().text();
+    let info_node = document.find(Attr("data-th", "Grape variety")).next();
+    if info_node.is_none() {
+        return vec![];
+    }
+    let info_node_text = info_node.unwrap().text();
     let re = Regex::new(r"\s[0-9]+\s%").unwrap();
     let grape_varieties_text = re.replace_all(&info_node_text, "");
     let grape_varieties = grape_varieties_text.split(", ").collect::<Vec<&str>>();
