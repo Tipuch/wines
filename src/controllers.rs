@@ -403,7 +403,7 @@ pub async fn get_wines(req: HttpRequest) -> Result<HttpResponse, error::Error> {
                 &wine.6,
                 &wine.7,
                 format!("{} ml", &wine.8),
-                format!("${}", &wine.9),
+                format!("{}", &wine.9),
                 &wine.10,
             )
         })

@@ -71,10 +71,10 @@ export default {
         getPrice(volumeStr, priceStr) {
             let volume = parseInt(volumeStr);
             if (volume === 750) {
-                let price = parseFloat(priceStr.substring(1));
+                let price = parseFloat(priceStr);
                 return `$${price.toFixed(2)}`;
             } else {
-                let price = parseFloat(priceStr.substring(1));
+                let price = parseFloat(priceStr);
                 const pricePer750Ml = (price / volume) * 750;
                 return `$${price.toFixed(2)} ($${pricePer750Ml.toFixed(2)}/750ml)`;
             }
