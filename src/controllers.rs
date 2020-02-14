@@ -71,7 +71,7 @@ pub async fn crawl_saq_controller(req: HttpRequest) -> Result<HttpResponse, erro
         let origin_url = String::from("https://www.saq.com/en/products/wine");
         rt.unwrap().block_on(crawl_saq(&origin_url));
     });
-    
+
     Ok(HttpResponse::Ok().body("Crawl has been started"))
 }
 

@@ -4,8 +4,8 @@ use crate::schema::saq_wines;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use diesel;
 use diesel::RunQueryDsl;
-use reqwest;
 use regex::Regex;
+use reqwest;
 use select::document::Document;
 use select::predicate::{Attr, Class, Name, Predicate};
 use std::str::FromStr;
@@ -25,9 +25,11 @@ pub async fn crawl_saq(origin_url: &String) {
     let mut document = Document::from(&*get_document(origin_url).await.unwrap());
     let mut next_page = get_next_page(&document);
     while next_page.is_some() {
-        for node in document
-            .find(Name("div").and(Class("product-item-info")).descendant(Name("a").and(Class("product-item-photo"))))
-        {
+        for node in document.find(
+            Name("div")
+                .and(Class("product-item-info"))
+                .descendant(Name("a").and(Class("product-item-photo"))),
+        ) {
             crawl_saq_wine(node.attr("href").unwrap()).await;
         }
         document = Document::from(&*get_document(&next_page.unwrap()).await.unwrap());
@@ -71,21 +73,12 @@ async fn crawl_saq_wine(detail_page_url: &str) {
         region = parse_wine_info(&document, "Region").unwrap();
     }
 
-    let available_online = document
-        .find(Class("out-of-stock-online"))
-        .next()
-        .is_none();
-    
-    let mut designation_of_origin = String::from("");
-    let designation_of_origin_option = parse_wine_info(
-        &document,
-        "Designation of origin"
-    );
+    let available_online = document.find(Class("out-of-stock-online")).next().is_none();
 
-    let regulated_designation_option = parse_wine_info(
-        &document,
-        "Regulated Designation"
-    );
+    let mut designation_of_origin = String::from("");
+    let designation_of_origin_option = parse_wine_info(&document, "Designation of origin");
+
+    let regulated_designation_option = parse_wine_info(&document, "Regulated Designation");
     let regulated_designation = designation_of_origin_option.is_some()
         && regulated_designation_option.is_some()
         && regulated_designation_option.unwrap() != "Table wine";
@@ -93,11 +86,7 @@ async fn crawl_saq_wine(detail_page_url: &str) {
         designation_of_origin = designation_of_origin_option.unwrap();
     }
 
-    let producer = parse_wine_info(
-        &document,
-        "Producer"
-    )
-    .unwrap();
+    let producer = parse_wine_info(&document, "Producer").unwrap();
 
     let volume_node = document.find(Attr("data-th", "Size")).next().unwrap();
     let volume_text = volume_node.text();
@@ -108,8 +97,7 @@ async fn crawl_saq_wine(detail_page_url: &str) {
             .to_string();
     } else {
         let volume_liters =
-        BigDecimal::from_str(&volume_text[..volume_text.find("L").unwrap()].trim())
-            .unwrap();
+            BigDecimal::from_str(&volume_text[..volume_text.find("L").unwrap()].trim()).unwrap();
         volume = (volume_liters * BigDecimal::from_str("1000").unwrap())
             .to_u32()
             .unwrap()
@@ -122,7 +110,8 @@ async fn crawl_saq_wine(detail_page_url: &str) {
         let alcohol_percent_text = alcohol_percent_option.unwrap().text();
         alcohol_percent = BigDecimal::from_str(
             alcohol_percent_text[..alcohol_percent_text.find("%").unwrap()].trim(),
-        ).unwrap();
+        )
+        .unwrap();
     } else {
         alcohol_percent = BigDecimal::from(0);
     }
@@ -147,10 +136,7 @@ async fn crawl_saq_wine(detail_page_url: &str) {
     println!("SAQ Wine: {} was added", name.trim());
 }
 
-fn parse_wine_info(
-    document: &Document,
-    info_selector: &str
-) -> Option<String> {
+fn parse_wine_info(document: &Document, info_selector: &str) -> Option<String> {
     let info_node = document.find(Attr("data-th", info_selector)).next();
     if info_node.is_some() {
         return Some(String::from(info_node.unwrap().text().trim()));
@@ -159,9 +145,14 @@ fn parse_wine_info(
 }
 
 fn parse_price(document: &Document) -> String {
-    String::from(document
-        .find(Attr("data-price-type", "finalPrice"))
-        .next().unwrap().attr("data-price-amount").unwrap())
+    String::from(
+        document
+            .find(Attr("data-price-type", "finalPrice"))
+            .next()
+            .unwrap()
+            .attr("data-price-amount")
+            .unwrap(),
+    )
 }
 
 fn parse_grape_varieties(document: &Document) -> Vec<String> {
@@ -173,5 +164,8 @@ fn parse_grape_varieties(document: &Document) -> Vec<String> {
     let re = Regex::new(r"\s[0-9]+\s%").unwrap();
     let grape_varieties_text = re.replace_all(&info_node_text, "");
     let grape_varieties = grape_varieties_text.split(", ").collect::<Vec<&str>>();
-    grape_varieties.iter().map(|grape_variety| grape_variety.trim().to_string()).collect()
+    grape_varieties
+        .iter()
+        .map(|grape_variety| grape_variety.trim().to_string())
+        .collect()
 }
