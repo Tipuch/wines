@@ -8,8 +8,7 @@
                     class="nav-link"
                     v-bind:class="{ active: wine_color === 'red' }"
                     data-toggle="tab"
-                    >Red</a
-                >
+                >Red</a>
             </li>
             <li class="nav-item">
                 <a
@@ -18,8 +17,7 @@
                     class="nav-link"
                     v-bind:class="{ active: wine_color === 'white' }"
                     data-toggle="tab"
-                    >White</a
-                >
+                >White</a>
             </li>
             <li class="nav-item">
                 <a
@@ -28,8 +26,7 @@
                     class="nav-link"
                     v-bind:class="{ active: wine_color === 'pink' }"
                     data-toggle="tab"
-                    >Pink</a
-                >
+                >Pink</a>
             </li>
         </ul>
         <div class="tab-content">
@@ -149,7 +146,7 @@ export default {
                         .toLocaleLowerCase()
                         .normalize('NFD')
                         .replace(/[\u0300-\u036f]/g, '')
-                        .indexOf(search) !== -1
+                        .indexOf(search.toLocaleLowerCase()) !== -1
                 );
             },
             headers: [

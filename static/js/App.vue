@@ -35,9 +35,10 @@
                                 class="custom-control-input"
                                 v-model="available_online"
                             />
-                            <label class="custom-control-label" for="available-online"
-                                >Available Online</label
-                            >
+                            <label
+                                class="custom-control-label"
+                                for="available-online"
+                            >Available Online</label>
                         </div>
                     </form>
                     <p>The results are ordered by $ per ml in ascending order.</p>
@@ -70,11 +71,12 @@ export default {
         getPrice(volumeStr, priceStr) {
             let volume = parseInt(volumeStr);
             if (volume === 750) {
-                return priceStr;
+                let price = parseFloat(priceStr.substring(1));
+                return `$${price.toFixed(2)}`;
             } else {
                 let price = parseFloat(priceStr.substring(1));
                 const pricePer750Ml = (price / volume) * 750;
-                return `${priceStr} ($${pricePer750Ml.toFixed(2)}/750ml)`;
+                return `$${price.toFixed(2)} ($${pricePer750Ml.toFixed(2)}/750ml)`;
             }
         },
 
